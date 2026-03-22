@@ -12,7 +12,6 @@ export interface FileChangeEvent {
   todos: TodoItem[];
   timestamp: number;
 }
-
 export interface TodoWatcher {
   readonly watching: boolean;
   start(path: string, extensions?: string[]): Promise<void>;
@@ -20,30 +19,19 @@ export interface TodoWatcher {
   getChanges(since?: number): FileChangeEvent[];
   clearChanges(): void;
 }
-
-/**
- * Server modes:
- * - 'standard': Stable Standard - basic scanning tools
- * - 'max': Stable Max - standard + watcher + database
- * - 'labs-standard': Labs Standard - experimental standard mode
- * - 'labs-max': Labs Max - all features including experimental stats
- */
 export type ServerMode = 'standard' | 'max' | 'labs-standard' | 'labs-max';
-
 export interface ModeConfig {
   enableWatcher: boolean;
   enableDatabase: boolean;
   enableGetTodoStats: boolean;
 }
-
-/** Mode configuration registry */
 export const modeConfigs: Record<ServerMode, ModeConfig> = {
-  'standard': {
+  standard: {
     enableWatcher: false,
     enableDatabase: false,
     enableGetTodoStats: false,
   },
-  'max': {
+  max: {
     enableWatcher: true,
     enableDatabase: true,
     enableGetTodoStats: false,
@@ -59,11 +47,10 @@ export const modeConfigs: Record<ServerMode, ModeConfig> = {
     enableGetTodoStats: true,
   },
 };
-
 export interface ServerOptions {
   mode: ServerMode;
-  /** Directory to watch (default: '.') — used when enableWatcher = true */
   watchPath?: string;
-  /** File extensions filter for watcher */
   extensions?: string[];
+  useGitignore?: boolean;
+  gitignorePath?: string;
 }

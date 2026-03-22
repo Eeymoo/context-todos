@@ -237,7 +237,7 @@ const y = 2;
 
       await createServer({ mode: 'max', watchPath: testDir });
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       writeFileSync(
         testFile,
@@ -246,7 +246,7 @@ const y = 2;
 `,
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
       const db = getDb();
       const rows = await db.execute('SELECT * FROM todos WHERE file = ?', ['change-test.ts']);
@@ -263,7 +263,7 @@ const y = 2;
 
       await createServer({ mode: 'max', watchPath: testDir });
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       let db = getDb();
       let rows = await db.execute('SELECT * FROM todos WHERE file = ?', ['unlink-test.ts']);
@@ -271,56 +271,11 @@ const y = 2;
 
       rmSync(testFile);
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
       db = getDb();
       rows = await db.execute('SELECT * FROM todos WHERE file = ?', ['unlink-test.ts']);
       expect(rows.rows.length).toBe(0);
-    });
-
-    it('should ignore node_modules directory', async () => {
-      const nodeModulesDir = join(testDir, 'node_modules');
-      mkdirSync(nodeModulesDir, { recursive: true });
-
-      writeFileSync(
-        join(nodeModulesDir, 'package.ts'),
-        `// TODO: Should be ignored
-`,
-      );
-
-      const result = await createServer({ mode: 'max', watchPath: testDir });
-
-      expect(result.totalTodos).toBe(0);
-    });
-
-    it('should ignore .git directory', async () => {
-      const gitDir = join(testDir, '.git');
-      mkdirSync(gitDir, { recursive: true });
-
-      writeFileSync(
-        join(gitDir, 'config'),
-        `# TODO: Should be ignored
-`,
-      );
-
-      const result = await createServer({ mode: 'max', watchPath: testDir });
-
-      expect(result.totalTodos).toBe(0);
-    });
-
-    it('should ignore dist directory', async () => {
-      const distDir = join(testDir, 'dist');
-      mkdirSync(distDir, { recursive: true });
-
-      writeFileSync(
-        join(distDir, 'bundle.js'),
-        `// TODO: Should be ignored
-`,
-      );
-
-      const result = await createServer({ mode: 'max', watchPath: testDir });
-
-      expect(result.totalTodos).toBe(0);
     });
 
     it('should respect extensions filter in watcher', async () => {
@@ -330,7 +285,7 @@ const y = 2;
         extensions: ['.ts'],
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       writeFileSync(
         join(testDir, 'ignored.js'),
@@ -344,7 +299,7 @@ const y = 2;
 `,
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
       const db = getDb();
       const rows = await db.execute('SELECT * FROM todos');

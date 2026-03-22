@@ -11,7 +11,7 @@ export function registerScanDirectory(server: McpServer) {
     {
       title: 'Scan Directory for TODOs',
       description:
-        'Recursively scans a directory for TODO/FIXME/HACK/XXX comments across all supported files. Skips node_modules, .git, and dist by default.',
+        'Recursively scans a directory for TODO/FIXME/HACK/XXX comments across all supported files.',
       inputSchema: z.object({
         path: z
           .string()

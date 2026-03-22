@@ -59,7 +59,7 @@ describe('Watcher Module', () => {
     });
 
     it('should use custom maxChanges parameter', async () => {
-      watcher = createWatcher(10);
+      watcher = createWatcher({ maxChanges: 10 });
       await watcher.start(testDir);
 
       // Create 20 files to exceed custom limit
@@ -141,66 +141,6 @@ describe('Watcher Module', () => {
       if (existsSync(testDir2)) {
         rmSync(testDir2, { recursive: true, force: true });
       }
-    });
-
-    it('should ignore node_modules directory', async () => {
-      watcher = createWatcher();
-      await watcher.start(testDir);
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const nodeModulesDir = join(testDir, 'node_modules');
-      mkdirSync(nodeModulesDir);
-
-      const testFile = join(nodeModulesDir, 'package.ts');
-      writeFileSync(testFile, '// TODO: Should be ignored\n');
-
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const changes = watcher.getChanges();
-      const paths = changes.map((c) => c.path);
-
-      expect(paths.includes(testFile)).toBe(false);
-    });
-
-    it('should ignore .git directory', async () => {
-      watcher = createWatcher();
-      await watcher.start(testDir);
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const gitDir = join(testDir, '.git');
-      mkdirSync(gitDir);
-
-      const testFile = join(gitDir, 'config');
-      writeFileSync(testFile, '# TODO: Should be ignored\n');
-
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const changes = watcher.getChanges();
-      const paths = changes.map((c) => c.path);
-
-      expect(paths.includes(testFile)).toBe(false);
-    });
-
-    it('should ignore dist directory', async () => {
-      watcher = createWatcher();
-      await watcher.start(testDir);
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const distDir = join(testDir, 'dist');
-      mkdirSync(distDir);
-
-      const testFile = join(distDir, 'bundle.js');
-      writeFileSync(testFile, '// TODO: Should be ignored\n');
-
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const changes = watcher.getChanges();
-      const paths = changes.map((c) => c.path);
-
-      expect(paths.includes(testFile)).toBe(false);
     });
   });
 
@@ -546,7 +486,7 @@ const x = 2;
 
   describe('maxChanges buffer limit', () => {
     it('should truncate oldest changes when limit exceeded', async () => {
-      watcher = createWatcher(5);
+      watcher = createWatcher({ maxChanges: 5 });
       await watcher.start(testDir);
 
       // Create 10 files to exceed limit
@@ -571,7 +511,7 @@ const x = 2;
     });
 
     it('should maintain correct slice behavior with changes.slice(-maxChanges)', async () => {
-      watcher = createWatcher(3);
+      watcher = createWatcher({ maxChanges: 3 });
       await watcher.start(testDir);
 
       // Create files one by one

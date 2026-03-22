@@ -24,6 +24,8 @@ program
   .option('--stdio', 'Force stdio mode instead of SSE')
   .option('--max', 'Enable Max mode (watcher + database persistence)')
   .option('--labs', 'Enable Labs mode (experimental features)')
+  .option('--use-gitignore', 'Use .gitignore to filter files', false)
+  .option('--gitignore-path <path>', 'Custom path to gitignore file (default: .gitignore)')
   .action(async (options) => {
     let mode: ServerMode;
     if (options.labs && options.max) {
@@ -38,10 +40,14 @@ program
 
     const useSSE = options.port !== undefined && !options.stdio;
 
-    const { server, totalTodos } = await createServer({
+    const serverOptions = {
       mode,
       watchPath: options.watch as string,
-    });
+      useGitignore: options.useGitignore as boolean,
+      ...(options.gitignorePath && { gitignorePath: options.gitignorePath as string }),
+    };
+
+    const { server, totalTodos } = await createServer(serverOptions);
 
     if (mode !== 'standard' && mode !== 'labs-standard') {
       const modeMsg = mode === 'labs-max'

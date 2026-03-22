@@ -95,18 +95,15 @@ const x = 1;
       expect(files.some((f) => f.endsWith('file3.py'))).toBe(false);
     });
 
-    it('should ignore node_modules and .git', () => {
-      mkdirSync(join(testDir, 'node_modules'));
-      mkdirSync(join(testDir, '.git'));
+    it('should collect files recursively', () => {
+      const subDir = join(testDir, 'src');
+      mkdirSync(subDir);
       writeFileSync(join(testDir, 'file1.ts'), '');
-      writeFileSync(join(testDir, 'node_modules', 'file2.ts'), '');
-      writeFileSync(join(testDir, '.git', 'file3.ts'), '');
+      writeFileSync(join(subDir, 'file2.ts'), '');
 
       const files = collectFiles(testDir);
 
-      expect(files.length).toBe(1);
-      expect(files[0]).toBeDefined();
-      expect(files[0]!.endsWith('file1.ts')).toBe(true);
+      expect(files.length).toBe(2);
     });
   });
 });

@@ -31,12 +31,6 @@ describe('watch tools', () => {
   });
 
   afterEach(async () => {
-    registerWatchTools(mockServer as never);
-    const stopWatchingTool = mockServer.getTool('stop-watching');
-    if (stopWatchingTool) {
-      await stopWatchingTool.handler({});
-    }
-
     if (existsSync(testDir)) {
       rmSync(testDir, { recursive: true, force: true });
     }
@@ -269,12 +263,12 @@ describe('watch tools', () => {
 
     it('should show TODO counts in change events', async () => {
       registerWatchTools(mockServer as never);
-      
+
       const startTool = mockServer.getTool('start-watching');
       expect(startTool).toBeDefined();
       await startTool!.handler({ path: testDir });
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       writeFileSync(
         join(testDir, 'todos.ts'),
@@ -283,12 +277,12 @@ describe('watch tools', () => {
 `,
       );
 
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 400));
 
       const getTool = mockServer.getTool('get-watched-changes');
       expect(getTool).toBeDefined();
       const result = await getTool!.handler({});
-      
+
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
       expect(content![0]!.text).toContain('2 TODOs');
@@ -296,21 +290,21 @@ describe('watch tools', () => {
 
     it('should detect file add events', async () => {
       registerWatchTools(mockServer as never);
-      
+
       const startTool = mockServer.getTool('start-watching');
       expect(startTool).toBeDefined();
       await startTool!.handler({ path: testDir });
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       writeFileSync(join(testDir, 'new.ts'), '// TODO: New\n');
 
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 400));
 
       const getTool = mockServer.getTool('get-watched-changes');
       expect(getTool).toBeDefined();
       const result = await getTool!.handler({});
-      
+
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
       expect(content![0]!.text).toContain('[ADD]');

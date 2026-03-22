@@ -1,15 +1,19 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { createWatcher } from '../watcher.js';
+import type { GitignoreFilter } from '../gitignore.js';
 
-export function registerWatchTools(server: McpServer) {
-  const watcher = createWatcher();
+export function registerWatchTools(
+  server: McpServer,
+  gitignoreFilter?: GitignoreFilter
+) {
+  const watcher = createWatcher(gitignoreFilter ? { gitignoreFilter } : undefined);
 
   server.registerTool(
     'start-watching',
     {
       title: 'Start Watching for TODO Changes',
-      description: 'Start watching a file or directory for changes. When files are added, modified, or deleted, their TODO comments are automatically re-scanned. Skips node_modules, .git, and dist.',
+      description: 'Start watching a file or directory for changes. When files are added, modified, or deleted, their TODO comments are automatically re-scanned.',
       inputSchema: z.object({
         path: z
           .string()

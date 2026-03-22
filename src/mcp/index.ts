@@ -11,40 +11,35 @@ import { initDb, syncFileTodos, removeFileTodos } from './db.js';
 import { collectFiles, scanFile } from './scanner.js';
 import type { ServerOptions } from './types.js';
 import { modeConfigs } from './types.js';
-
-const IGNORED = /node_modules|\.git|dist/;
+import { createGitignoreFilter, type GitignoreFilter } from './gitignore.js';
 
 export async function createServer(options: ServerOptions = { mode: 'standard' }) {
   const { mode } = options;
   const config = modeConfigs[mode];
 
+  const watchPath = resolve(options.watchPath ?? '.');
+  const gitignoreFilter: GitignoreFilter = options.useGitignore
+    ? createGitignoreFilter(watchPath, options.gitignorePath)
+    : { ignores: () => false, ignoresDir: () => false };
+
   const server = new McpServer(
-    {
-      name: 'context-todos',
-      version: '1.0.0',
-    },
-    {
-      capabilities: { logging: {} },
-    },
+    { name: 'context-todos', version: '1.0.0' },
+    { capabilities: { logging: {} } },
   );
 
-  // Always register base tools
   registerScanFile(server);
   registerScanDirectory(server);
   registerListExtensions(server);
 
   if (config.enableWatcher) {
-    registerWatchTools(server);
+    registerWatchTools(server, gitignoreFilter);
   }
 
   if (config.enableDatabase) {
     registerListTodos(server);
-
-    const watchPath = resolve(options.watchPath ?? '.');
-
     await initDb(watchPath);
 
-    const files = collectFiles(watchPath);
+    const files = collectFiles(watchPath, undefined, gitignoreFilter);
     let totalTodos = 0;
     for (const file of files) {
       const todos = await scanFile(file);
@@ -58,7 +53,8 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
 
     const dbWatcher = watch(watchPath, {
       ignored: (fp: string, stats?: { isFile(): boolean }) => {
-        if (IGNORED.test(fp)) return true;
+        const relPath = relative(watchPath, fp);
+        if (gitignoreFilter.ignores(relPath)) return true;
         if (stats?.isFile() && options.extensions) {
           const ext = '.' + fp.split('.').pop();
           return !options.extensions.includes(ext);

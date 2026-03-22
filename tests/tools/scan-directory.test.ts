@@ -225,63 +225,6 @@ const y = 2;
     });
   });
 
-  describe('ignored directories', () => {
-    it('should skip node_modules directory', async () => {
-      const nodeModules = join(testDir, 'node_modules');
-      mkdirSync(nodeModules, { recursive: true });
-
-      writeFileSync(join(testDir, 'app.ts'), '// TODO: App code\n');
-      writeFileSync(join(nodeModules, 'package.ts'), '// TODO: Should be ignored\n');
-
-      registerScanDirectory(mockServer as never);
-      const tool = mockServer.getTool('scan-directory');
-      expect(tool).toBeDefined();
-
-      const result = await tool!.handler({ path: testDir });
-      const content = (result as { content: { type: string; text: string }[] }).content;
-      expect(content).toBeDefined();
-      expect(content![0]!.text).toContain('Found 1 TODO(s)');
-      expect(content![0]!.text).toContain('app.ts');
-      expect(content![0]!.text).not.toContain('node_modules');
-    });
-
-    it('should skip .git directory', async () => {
-      const gitDir = join(testDir, '.git');
-      mkdirSync(gitDir, { recursive: true });
-
-      writeFileSync(join(testDir, 'app.ts'), '// TODO: App code\n');
-      writeFileSync(join(gitDir, 'config'), '# TODO: Should be ignored\n');
-
-      registerScanDirectory(mockServer as never);
-      const tool = mockServer.getTool('scan-directory');
-      expect(tool).toBeDefined();
-
-      const result = await tool!.handler({ path: testDir });
-      const content = (result as { content: { type: string; text: string }[] }).content;
-      expect(content).toBeDefined();
-      expect(content![0]!.text).toContain('Found 1 TODO(s)');
-      expect(content![0]!.text).not.toContain('.git');
-    });
-
-    it('should skip dist directory', async () => {
-      const distDir = join(testDir, 'dist');
-      mkdirSync(distDir, { recursive: true });
-
-      writeFileSync(join(testDir, 'app.ts'), '// TODO: App code\n');
-      writeFileSync(join(distDir, 'bundle.js'), '// TODO: Should be ignored\n');
-
-      registerScanDirectory(mockServer as never);
-      const tool = mockServer.getTool('scan-directory');
-      expect(tool).toBeDefined();
-
-      const result = await tool!.handler({ path: testDir });
-      const content = (result as { content: { type: string; text: string }[] }).content;
-      expect(content).toBeDefined();
-      expect(content![0]!.text).toContain('Found 1 TODO(s)');
-      expect(content![0]!.text).not.toContain('dist');
-    });
-  });
-
   describe('multiple TODO types', () => {
     it('should detect all TODO tag types', async () => {
       writeFileSync(

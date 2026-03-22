@@ -1,18 +1,14 @@
 import { parse, isExtensionSupported } from 'leasot';
 import { readFileSync, readdirSync } from 'node:fs';
-import { resolve, extname } from 'node:path';
+import { resolve, extname, relative } from 'node:path';
 import type { TodoItem } from './types.js';
+import type { GitignoreFilter } from './gitignore.js';
 
-const IGNORED_DIRS = new Set(['node_modules', '.git', 'dist']);
-
-/**
- * 递归收集目录中所有受支持的文件路径。
- * 自动跳过 node_modules、.git、dist 目录。
- * @param dir - 要扫描的根目录路径
- * @param extensions - 可选的扩展名过滤列表（如 ['.ts', '.js']），为空则收集所有支持的扩展名
- * @returns 匹配文件的绝对路径数组
- */
-export function collectFiles(dir: string, extensions?: string[]): string[] {
+export function collectFiles(
+  dir: string,
+  extensions?: string[],
+  gitignoreFilter?: GitignoreFilter | null
+): string[] {
   const files: string[] = [];
 
   function walk(current: string) {
@@ -21,9 +17,13 @@ export function collectFiles(dir: string, extensions?: string[]): string[] {
       const fullPath = resolve(current, entry.name);
 
       if (entry.isDirectory()) {
-        if (IGNORED_DIRS.has(entry.name)) continue;
+        const relDir = relative(dir, fullPath);
+        if (gitignoreFilter?.ignoresDir(relDir)) continue;
         walk(fullPath);
       } else if (entry.isFile()) {
+        const relPath = relative(dir, fullPath);
+        if (gitignoreFilter?.ignores(relPath)) continue;
+
         const ext = extname(entry.name);
         if (ext && isExtensionSupported(ext)) {
           if (!extensions || extensions.includes(ext)) {
@@ -38,12 +38,6 @@ export function collectFiles(dir: string, extensions?: string[]): string[] {
   return files;
 }
 
-/**
- * 扫描单个文件，提取其中的 TODO/FIXME/HACK/XXX 注释。
- * 若文件扩展名不受支持，则返回空数组。
- * @param filePath - 要扫描的文件路径
- * @returns 解析到的 TodoItem 数组
- */
 export async function scanFile(filePath: string): Promise<TodoItem[]> {
   const ext = extname(filePath);
   if (!ext || !isExtensionSupported(ext)) {
