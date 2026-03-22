@@ -7,12 +7,12 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eeymoo/context-todos.git"
+    "url": "https://github.com/Eeymoo/context-todos"
   },
   "bugs": {
-    "url": "https://github.com/eeymoo/context-todos/issues"
+    "url": "https://github.com/Eeymoo/context-todos/issues"
   },
-  "homepage": "https://github.com/eeymoo/context-todos#readme",
+  "homepage": "https://github.com/Eeymoo/context-todos#readme",
   "bin": {
     "context-todos": "./dist/index.js"
   },
