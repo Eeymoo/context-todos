@@ -1,12 +1,25 @@
 {
-  "name": "context-todos",
+  "name": "@eeymoo/context-todos",
   "version": "1.0.0",
   "type": "module",
+  "description": "MCP server for scanning and managing TODO/FIXME/HACK/XXX comments in your codebase",
+  "author": "eeymoo",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eeymoo/context-todos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eeymoo/context-todos/issues"
+  },
+  "homepage": "https://github.com/eeymoo/context-todos#readme",
   "bin": {
     "context-todos": "./dist/index.js"
   },
-  "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts mcp",
@@ -14,11 +27,18 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "inspector": "pnpm dlx @modelcontextprotocol/inspector node dist/index.js mcp",
-    "inspector:dev": "pnpm dlx @modelcontextprotocol/inspector tsx src/index.ts mcp"
+    "inspector:dev": "pnpm dlx @modelcontextprotocol/inspector tsx src/index.ts mcp",
+    "prepublishOnly": "pnpm build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "todo",
+    "fixme",
+    "code-scanner",
+    "code-analysis",
+    "ai-tools"
+  ],
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
     "@libsql/client": "^0.17.2",
@@ -41,5 +61,8 @@
   ],
   "engines": {
     "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
