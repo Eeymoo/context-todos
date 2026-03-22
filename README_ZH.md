@@ -1,3 +1,5 @@
+[English](./README.md) | **简体中文**
+
 # Context-Todos
 
 一个 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 服务器，用于扫描和管理代码库中的 TODO/FIXME/HACK/XXX 注释。
@@ -11,9 +13,9 @@ Context-Todos 帮助你追踪和管理整个项目中的代码注释。它扫描
 - **扫描文件**：从单个文件中提取 TODO 注释
 - **扫描目录**：递归扫描目录中所有支持的文件
 - **列出扩展名**：查看所有支持的文件扩展名
-- **监视模式**：实时监控文件变化（max/labs 模式）
-- **TODO 数据库**：持久化存储所有 TODO 项（max/labs 模式）
-- **统计信息**：按标签和文件获取 TODO 统计（labs 模式）
+- **监视模式**：实时监控文件变化（`--max` / `--labs --max`）
+- **TODO 数据库**：持久化存储所有 TODO 项（`--max` / `--labs --max`）
+- **统计信息**：按标签和文件获取 TODO 统计（`--labs --max`）
 
 ### 支持的 TODO 标签
 
@@ -50,12 +52,17 @@ Context-Todos 帮助你追踪和管理整个项目中的代码注释。它扫描
 ### 快速开始（npx）
 
 ```bash
-# 使用 npx 直接运行
+# 使用 npx 直接运行（稳定版 Standard）
 npx @eeymoo/context-todos mcp
 
-# 带选项运行
+# 稳定版 Max（带监视）
 npx @eeymoo/context-todos mcp --max
+
+# 实验版 Standard
 npx @eeymoo/context-todos mcp --labs
+
+# 实验版 Max（所有功能，包含实验性统计）
+npx @eeymoo/context-todos mcp --labs --max
 ```
 
 ### 安装
@@ -86,7 +93,7 @@ context-todos mcp
 }
 ```
 
-或使用 max/labs 模式：
+或使用其他模式：
 
 ```json
 {
@@ -118,21 +125,30 @@ pnpm dev
 
 ### 服务器模式
 
-| 模式 | 描述 | 可用工具 |
-|------|------|----------|
-| `standard` | 基础扫描工具 | `scan-file`, `scan-directory`, `list-supported-extensions` |
-| `max` | 增加文件监视和数据库 | 所有 standard + `watch`, `unwatch`, `list-todos` |
-| `labs` | 实验模式，包含统计功能 | 所有 max + `get-todo-stats` |
+产品有两类功能：
+
+- **稳定版**：生产就绪的功能，有 `Standard` 和 `Max` 两个变体
+- **实验版（Labs）**：实验性功能，同样有 `Standard` 和 `Max` 两个变体
+
+| 类别 | 模式 | CLI | 描述 | 工具 |
+|------|------|-----|------|------|
+| 稳定版 | Standard | （默认） | 基础扫描工具 | `scan-file`, `scan-directory`, `list-supported-extensions` |
+| 稳定版 | Max | `--max` | Standard + 文件监视和数据库 | 所有 standard + `watch`, `unwatch`, `list-todos` |
+| 实验版 | Standard | `--labs` | 实验性标准模式 | 与稳定版 Standard 相同 |
+| 实验版 | Max | `--labs --max` | 所有功能，包含实验性统计 | 所有 max + `get-todo-stats` |
 
 ```bash
-# 标准模式（默认）
-node dist/index.js mcp
+# 稳定版 Standard（默认）
+npx @eeymoo/context-todos mcp
 
-# Max 模式（带监视）
-node dist/index.js mcp --mode max
+# 稳定版 Max（带监视）
+npx @eeymoo/context-todos mcp --max
 
-# Labs 模式（完整功能）
-node dist/index.js mcp --mode labs
+# 实验版 Standard
+npx @eeymoo/context-todos mcp --labs
+
+# 实验版 Max（所有功能）
+npx @eeymoo/context-todos mcp --labs --max
 ```
 
 ### MCP 工具
@@ -175,7 +191,7 @@ node dist/index.js mcp --mode labs
 }
 ```
 
-#### `watch`（max/labs 模式）
+#### `watch`（`--max` / `--labs --max`）
 
 开始监视目录的文件变化。
 
@@ -189,7 +205,7 @@ node dist/index.js mcp --mode labs
 }
 ```
 
-#### `unwatch`（max/labs 模式）
+#### `unwatch`（`--max` / `--labs --max`）
 
 停止监视。
 
@@ -200,7 +216,7 @@ node dist/index.js mcp --mode labs
 }
 ```
 
-#### `list-todos`（max/labs 模式）
+#### `list-todos`（`--max` / `--labs --max`）
 
 从数据库列出所有跟踪的 TODO。
 
@@ -214,7 +230,7 @@ node dist/index.js mcp --mode labs
 }
 ```
 
-#### `get-todo-stats`（labs 模式）
+#### `get-todo-stats`（仅 `--labs --max`）
 
 获取按标签和文件分组的 TODO 统计信息。
 

@@ -177,7 +177,7 @@ const y = 2;
 
   describe('createServer in labs mode', () => {
     it('should create server with labs mode', async () => {
-      const result = await createServer({ mode: 'labs', watchPath: testDir });
+      const result = await createServer({       mode: 'labs-max', watchPath: testDir });
 
       expect(result).toBeDefined();
       expect(result.server).toBeDefined();
@@ -192,13 +192,13 @@ const y = 2;
 `,
       );
 
-      const result = await createServer({ mode: 'labs', watchPath: testDir });
+      const result = await createServer({       mode: 'labs-max', watchPath: testDir });
 
       expect(result.totalTodos).toBe(2);
     });
 
     it('should initialize database in labs mode', async () => {
-      await createServer({ mode: 'labs', watchPath: testDir });
+      await createServer({       mode: 'labs-max', watchPath: testDir });
 
       const dbFile = join(testDir, '.context-todos.db');
       expect(existsSync(dbFile)).toBe(true);
@@ -441,7 +441,7 @@ const y = 2;
 `,
       );
 
-      const result = await createServer({ mode: 'labs', watchPath: testDir });
+      const result = await createServer({       mode: 'labs-max', watchPath: testDir });
 
       expect(result.totalTodos).toBe(3);
     });

@@ -1,5 +1,7 @@
 # Context-Todos
 
+[简体中文](./README_ZH.md) | English
+
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that scans and manages TODO/FIXME/HACK/XXX comments in your codebase.
 
 ## What It Does
@@ -50,12 +52,17 @@ Context-Todos helps you track and manage code annotations across your entire pro
 ### Quick Start (npx)
 
 ```bash
-# Run directly with npx
+# Run directly with npx (Stable Standard)
 npx @eeymoo/context-todos mcp
 
-# With options
+# Stable Max (with watching)
 npx @eeymoo/context-todos mcp --max
+
+# Labs Standard
 npx @eeymoo/context-todos mcp --labs
+
+# Labs Max (all features including experimental)
+npx @eeymoo/context-todos mcp --labs --max
 ```
 
 ### Installation
@@ -118,21 +125,30 @@ pnpm dev
 
 ### Server Modes
 
-| Mode | Description | Tools Available |
-|------|-------------|-----------------|
-| `standard` | Basic scanning tools | `scan-file`, `scan-directory`, `list-supported-extensions` |
-| `max` | Adds file watching & database | All standard + `watch`, `unwatch`, `list-todos` |
-| `labs` | Experimental mode with statistics | All max + `get-todo-stats` |
+The product has two categories of features:
+
+- **Stable**: Production-ready features with `Standard` and `Max` variants
+- **Labs**: Experimental features, also with `Standard` and `Max` variants
+
+| Category | Mode | CLI | Description | Tools |
+|----------|------|-----|-------------|-------|
+| Stable | Standard | (default) | Basic scanning tools | `scan-file`, `scan-directory`, `list-supported-extensions` |
+| Stable | Max | `--max` | Standard + file watching & database | All standard + `watch`, `unwatch`, `list-todos` |
+| Labs | Standard | `--labs` | Experimental standard mode | Same as Stable Standard |
+| Labs | Max | `--labs --max` | All features including experimental | All max + `get-todo-stats` |
 
 ```bash
-# Standard mode (default)
-node dist/index.js mcp
+# Stable Standard (default)
+npx @eeymoo/context-todos mcp
 
-# Max mode (with watching)
-node dist/index.js mcp --mode max
+# Stable Max (with watching)
+npx @eeymoo/context-todos mcp --max
 
-# Labs mode (full featured)
-node dist/index.js mcp --mode labs
+# Labs Standard
+npx @eeymoo/context-todos mcp --labs
+
+# Labs Max (all features)
+npx @eeymoo/context-todos mcp --labs --max
 ```
 
 ### MCP Tools
@@ -175,7 +191,7 @@ List all supported file extensions.
 }
 ```
 
-#### `watch` (max/labs mode)
+#### `watch` (max / labs --max)
 
 Start watching a directory for file changes.
 
@@ -189,7 +205,7 @@ Start watching a directory for file changes.
 }
 ```
 
-#### `unwatch` (max/labs mode)
+#### `unwatch` (max / labs --max)
 
 Stop watching.
 
@@ -200,7 +216,7 @@ Stop watching.
 }
 ```
 
-#### `list-todos` (max/labs mode)
+#### `list-todos` (max / labs --max)
 
 List all tracked TODOs from the database.
 
@@ -214,7 +230,7 @@ List all tracked TODOs from the database.
 }
 ```
 
-#### `get-todo-stats` (labs mode)
+#### `get-todo-stats` (labs --max only)
 
 Get TODO statistics grouped by tag and file.
 

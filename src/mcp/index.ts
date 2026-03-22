@@ -10,11 +10,13 @@ import { registerGetTodoStats } from './tools/get-todo-stats.js';
 import { initDb, syncFileTodos, removeFileTodos } from './db.js';
 import { collectFiles, scanFile } from './scanner.js';
 import type { ServerOptions } from './types.js';
+import { modeConfigs } from './types.js';
 
 const IGNORED = /node_modules|\.git|dist/;
 
 export async function createServer(options: ServerOptions = { mode: 'standard' }) {
   const { mode } = options;
+  const config = modeConfigs[mode];
 
   const server = new McpServer(
     {
@@ -26,12 +28,16 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
     },
   );
 
+  // Always register base tools
   registerScanFile(server);
   registerScanDirectory(server);
   registerListExtensions(server);
 
-  if (mode === 'max' || mode === 'labs') {
+  if (config.enableWatcher) {
     registerWatchTools(server);
+  }
+
+  if (config.enableDatabase) {
     registerListTodos(server);
 
     const watchPath = resolve(options.watchPath ?? '.');
@@ -86,7 +92,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
         void removeFileTodos(relative(watchPath, p));
       });
 
-    if (mode === 'labs') {
+    if (config.enableGetTodoStats) {
       registerGetTodoStats(server);
     }
 

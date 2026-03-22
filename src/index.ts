@@ -22,14 +22,18 @@ program
   .option('-p, --port <number>', 'Port to run the MCP server on (enables SSE mode)')
   .option('-w, --watch <path>', 'Path to watch for changes', '.')
   .option('--stdio', 'Force stdio mode instead of SSE')
-  .option('--max', 'Enable full-featured mode (watcher + database persistence)')
-  .option('--labs', 'Enable labs mode (includes experimental features)')
+  .option('--max', 'Enable Max mode (watcher + database persistence)')
+  .option('--labs', 'Enable Labs mode (experimental features)')
   .action(async (options) => {
-    let mode: ServerMode = 'standard';
-    if (options.labs) {
-      mode = 'labs';
+    let mode: ServerMode;
+    if (options.labs && options.max) {
+      mode = 'labs-max';
+    } else if (options.labs) {
+      mode = 'labs-standard';
     } else if (options.max) {
       mode = 'max';
+    } else {
+      mode = 'standard';
     }
 
     const useSSE = options.port !== undefined && !options.stdio;
@@ -39,8 +43,10 @@ program
       watchPath: options.watch as string,
     });
 
-    if (mode !== 'standard') {
-      const modeMsg = mode === 'labs' ? 'Starting in labs mode (all features)' : 'Starting in max mode (watcher + database)';
+    if (mode !== 'standard' && mode !== 'labs-standard') {
+      const modeMsg = mode === 'labs-max'
+        ? 'Starting in labs-max mode (all features + experimental)'
+        : 'Starting in max mode (watcher + database)';
       logger.info(modeMsg);
       logger.info(`Initial scan complete: ${totalTodos} TODO(s) persisted`);
     }
