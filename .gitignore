@@ -35,3 +35,6 @@ coverage/
 # 临时文件
 *.tmp
 .cache/
+
+# 数据库文件
+.context-todos.db
