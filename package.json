@@ -9,10 +9,12 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "start": "node dist/index.js",
-    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js mcp",
-    "inspector:dev": "npx @modelcontextprotocol/inspector ts-node src/index.ts mcp"
+    "dev": "tsx src/index.ts mcp",
+    "start": "node dist/index.js mcp",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "inspector": "pnpm dlx @modelcontextprotocol/inspector node dist/index.js mcp",
+    "inspector:dev": "pnpm dlx @modelcontextprotocol/inspector tsx src/index.ts mcp"
   },
   "keywords": [],
   "author": "",
@@ -29,9 +31,13 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
-    "typescript": "^5.9.3"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=18.0.0"
   }
