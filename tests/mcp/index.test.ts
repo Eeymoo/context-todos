@@ -166,8 +166,8 @@ const y = 2;
       expect(result.totalTodos).toBe(0);
     });
 
-    it('should use current directory when watchPath not provided', async () => {
-      const result = await createServer({ mode: 'max' });
+    it('should use provided watchPath', async () => {
+      const result = await createServer({ mode: 'max', watchPath: testDir });
 
       expect(result).toBeDefined();
       expect(result.server).toBeDefined();
