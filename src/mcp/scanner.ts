@@ -7,6 +7,10 @@ import type { GitignoreFilter } from './gitignore.js';
 
 const readdir = promisify(readdirCb);
 
+/*
+ * Collects all supported files from a directory recursively.
+ * Optionally filters by extensions and applies gitignore/custom filters.
+ */
 export async function collectFiles(
   dir: string,
   extensions?: string[],

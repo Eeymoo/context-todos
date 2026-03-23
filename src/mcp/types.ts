@@ -54,4 +54,5 @@ export interface ServerOptions {
   extensions?: string[];
   useGitignore?: boolean;
   gitignorePath?: string;
+  filter?: string;
 }

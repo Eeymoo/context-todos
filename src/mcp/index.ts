@@ -11,16 +11,23 @@ import { initDb, syncFileTodos, removeFileTodos } from './db.js';
 import { collectFiles, scanFile } from './scanner.js';
 import type { ServerOptions } from './types.js';
 import { modeConfigs } from './types.js';
-import { createGitignoreFilter, type GitignoreFilter } from './gitignore.js';
+import { createGitignoreFilter, createCustomFilter, combineFilters, type GitignoreFilter } from './gitignore.js';
 
 export async function createServer(options: ServerOptions = { mode: 'standard' }) {
   const { mode } = options;
   const config = modeConfigs[mode];
 
   const watchPath = resolve(options.watchPath ?? '.');
-  const gitignoreFilter: GitignoreFilter = options.useGitignore
+
+  const gitignoreFilter: GitignoreFilter | null = options.useGitignore
     ? createGitignoreFilter(watchPath, options.gitignorePath)
-    : { ignores: () => false, ignoresDir: () => false };
+    : null;
+
+  const customFilter: GitignoreFilter | null = options.filter
+    ? createCustomFilter(options.filter)
+    : null;
+
+  const combinedFilter = combineFilters(gitignoreFilter, customFilter);
 
   const server = new McpServer(
     { name: 'context-todos', version: '1.0.0' },
@@ -32,14 +39,14 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
   registerListExtensions(server);
 
   if (config.enableWatcher) {
-    registerWatchTools(server, gitignoreFilter);
+    registerWatchTools(server, combinedFilter);
   }
 
   if (config.enableDatabase) {
     registerListTodos(server);
     await initDb(watchPath);
 
-    const files = await collectFiles(watchPath, undefined, gitignoreFilter);
+    const files = await collectFiles(watchPath, undefined, combinedFilter);
     let totalTodos = 0;
     for (const file of files) {
       const todos = await scanFile(file);
@@ -54,7 +61,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
     const dbWatcher = watch(watchPath, {
       ignored: (fp: string, stats?: { isFile(): boolean }) => {
         const relPath = relative(watchPath, fp);
-        if (gitignoreFilter.ignores(relPath)) return true;
+        if (combinedFilter.ignores(relPath)) return true;
         if (stats?.isFile() && options.extensions) {
           const ext = extname(fp);
           return !options.extensions.includes(ext);

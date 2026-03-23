@@ -12,6 +12,51 @@ const noopFilter: GitignoreFilter = {
   ignoresDir: () => false,
 };
 
+/*
+ * Creates a custom filter from comma-separated patterns.
+ * Reuses ignore() library for pattern matching consistency.
+ * Example: createCustomFilter("*.test.ts,__tests__/**,dist/**")
+ */
+export function createCustomFilter(patterns: string): GitignoreFilter {
+  const patternList = patterns
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  if (patternList.length === 0) {
+    return noopFilter;
+  }
+
+  const ig = ignore().add(patternList);
+
+  return {
+    ignores: (pathname: string) => ig.ignores(pathname),
+    ignoresDir: (dirPath: string) => ig.ignores(dirPath) || ig.ignores(dirPath + '/'),
+  };
+}
+
+/*
+ * Combines multiple GitignoreFilter into one.
+ * A path is ignored if ANY of the filters ignores it.
+ */
+export function combineFilters(
+  ...filters: (GitignoreFilter | null | undefined)[]
+): GitignoreFilter {
+  const validFilters = filters.filter((f): f is GitignoreFilter => f != null);
+
+  if (validFilters.length === 0) {
+    return noopFilter;
+  }
+
+  if (validFilters.length === 1) {
+    return validFilters[0]!;
+  }
+
+  return {
+    ignores: (pathname: string) => validFilters.some((f) => f.ignores(pathname)),
+    ignoresDir: (dirPath: string) => validFilters.some((f) => f.ignoresDir(dirPath)),
+  };
+}
 export function createGitignoreFilter(
   rootDir: string,
   gitignorePath: string = '.gitignore'
