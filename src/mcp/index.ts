@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { resolve, relative } from 'node:path';
+import { resolve, relative, extname } from 'node:path';
 import { watch } from 'chokidar';
 import { registerScanFile } from './tools/scan-file.js';
 import { registerScanDirectory } from './tools/scan-directory.js';
@@ -39,7 +39,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
     registerListTodos(server);
     await initDb(watchPath);
 
-    const files = collectFiles(watchPath, undefined, gitignoreFilter);
+    const files = await collectFiles(watchPath, undefined, gitignoreFilter);
     let totalTodos = 0;
     for (const file of files) {
       const todos = await scanFile(file);
@@ -56,14 +56,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
         const relPath = relative(watchPath, fp);
         if (gitignoreFilter.ignores(relPath)) return true;
         if (stats?.isFile() && options.extensions) {
-          /*
-           * TODO(bug): Using string split for extension extraction is unreliable.
-           * For files like 'archive.tar.gz' or 'component.test.tsx', this returns
-           * only the last segment ('.gz' or '.tsx') instead of the full extension.
-           * Should use extname() from 'node:path' for consistent behavior.
-           * Example fix: const ext = extname(fp);
-           */
-          const ext = '.' + fp.split('.').pop();
+          const ext = extname(fp);
           return !options.extensions.includes(ext);
         }
         return false;

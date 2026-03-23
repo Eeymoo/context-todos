@@ -7,10 +7,11 @@ export function registerListTodos(server: McpServer) {
     'list-todos',
     {
       title: 'List TODOs from Database',
-      description: 'Query persisted TODOs from the database. Supports filtering by tag and file, ordered by most recently updated.',
+      description: 'Query persisted TODOs from the database. Supports filtering by tag, category, and file, ordered by most recently updated.',
       inputSchema: z.object({
         tag: z.string().describe('Filter by tag (e.g. "TODO", "FIXME", "HACK")').optional(),
         file: z.string().describe('Filter by file path (partial match)').optional(),
+        category: z.string().describe('Filter by category (e.g. "feat", "bug", "ux")').optional(),
         limit: z.number().describe('Maximum number of results (default: 100)').optional(),
         offset: z.number().describe('Offset for pagination (default: 0)').optional(),
       }),
@@ -20,6 +21,7 @@ export function registerListTodos(server: McpServer) {
         const query: Parameters<typeof queryTodos>[0] = {};
         if (params.tag !== undefined) query.tag = params.tag;
         if (params.file !== undefined) query.file = params.file;
+        if (params.category !== undefined) query.category = params.category;
         if (params.limit !== undefined) query.limit = params.limit;
         if (params.offset !== undefined) query.offset = params.offset;
 
@@ -33,7 +35,7 @@ export function registerListTodos(server: McpServer) {
 
         const formatted = todos
           .map((todo) => {
-            let line = '[' + todo.tag + '] ' + todo.file + ':' + todo.line + ' - ' + todo.text;
+            let line = '[' + todo.tag + (todo.category ? '(' + todo.category + ')' : '') + '] ' + todo.file + ':' + todo.line + ' - ' + todo.text;
             if (todo.ref) {
               line = line + ' (ref: ' + todo.ref + ')';
             }

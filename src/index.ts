@@ -24,13 +24,7 @@ program
   .option('--stdio', 'Force stdio mode instead of SSE')
   .option('--max', 'Enable Max mode (watcher + database persistence)')
   .option('--labs', 'Enable Labs mode (experimental features)')
-  /*
-   * TODO(ux): Consider changing default to true for better user experience.
-   * Most projects have .gitignore to exclude node_modules, dist, etc.
-   * Currently defaults to false, which may cause unnecessary scanning of
-   * large directories and slower performance for typical projects.
-   */
-  .option('--use-gitignore', 'Use .gitignore to filter files', false)
+  .option('--use-gitignore', 'Use .gitignore to filter files', true)
   .option('--gitignore-path <path>', 'Custom path to gitignore file (default: .gitignore)')
   .action(async (options) => {
     let mode: ServerMode;

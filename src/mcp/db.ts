@@ -10,12 +10,6 @@ export async function initDb(basePath: string = '.'): Promise<Client> {
   const dbPath = resolve(basePath, DB_FILE);
   client = createClient({ url: `file:${dbPath}` });
 
-  /*
-   * TODO(feat): Add category column to database schema.
-   * ALTER TABLE todos ADD COLUMN category TEXT
-   * Create index on category for efficient filtering
-   * Support migration from existing databases without category column
-   */
   await client.batch(
     [
       `CREATE TABLE IF NOT EXISTS todos (
@@ -25,12 +19,14 @@ export async function initDb(basePath: string = '.'): Promise<Client> {
         line INTEGER NOT NULL,
         ref TEXT NOT NULL DEFAULT '',
         text TEXT NOT NULL,
+        category TEXT,
         created_at INTEGER NOT NULL DEFAULT (unixepoch('now', 'subsec') * 1000),
         updated_at INTEGER NOT NULL DEFAULT (unixepoch('now', 'subsec') * 1000),
         UNIQUE(file, line, tag)
       )`,
       `CREATE INDEX IF NOT EXISTS idx_todos_file ON todos(file)`,
       `CREATE INDEX IF NOT EXISTS idx_todos_tag ON todos(tag)`,
+      `CREATE INDEX IF NOT EXISTS idx_todos_category ON todos(category)`,
       `CREATE INDEX IF NOT EXISTS idx_todos_updated ON todos(updated_at DESC)`,
     ],
     'write',
@@ -60,9 +56,9 @@ export async function syncFileTodos(file: string, todos: TodoItem[]): Promise<vo
 
     for (const todo of todos) {
       await tx.execute({
-        sql: `INSERT INTO todos (file, tag, line, ref, text, updated_at)
-              VALUES (?, ?, ?, ?, ?, unixepoch('now', 'subsec') * 1000)`,
-        args: [todo.file, todo.tag, todo.line, todo.ref || '', todo.text],
+        sql: `INSERT INTO todos (file, tag, line, ref, text, category, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, unixepoch('now', 'subsec') * 1000)`,
+        args: [todo.file, todo.tag, todo.line, todo.ref || '', todo.text, todo.category ?? null],
       });
     }
 
@@ -83,10 +79,7 @@ export async function removeFileTodos(file: string): Promise<void> {
 export interface TodoQuery {
   tag?: string | undefined;
   file?: string | undefined;
-  /*
-   * TODO(feat): Add category filter support to query interface.
-   * Enable filtering by category: { category: 'performance' }
-   */
+  category?: string | undefined;
   limit?: number | undefined;
   offset?: number | undefined;
 }
@@ -105,6 +98,10 @@ export async function queryTodos(query: TodoQuery = {}): Promise<{ todos: TodoIt
     conditions.push('file LIKE ?');
     args.push(`%${query.file}%`);
   }
+  if (query.category) {
+    conditions.push('category = ?');
+    args.push(query.category);
+  }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -118,7 +115,7 @@ export async function queryTodos(query: TodoQuery = {}): Promise<{ todos: TodoIt
   const offset = query.offset ?? 0;
 
   const result = await db.execute({
-    sql: `SELECT file, tag, line, ref, text FROM todos ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
+    sql: `SELECT file, tag, line, ref, text, category FROM todos ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
     args: [...args, limit, offset],
   });
 
@@ -128,6 +125,7 @@ export async function queryTodos(query: TodoQuery = {}): Promise<{ todos: TodoIt
     line: Number(row.line),
     ref: String(row.ref),
     text: String(row.text),
+    ...(row.category ? { category: String(row.category) } : {}),
   }));
 
   return { todos, total };
@@ -137,11 +135,7 @@ export interface TodoStats {
   total: number;
   byTag: { tag: string; count: number }[];
   byFile: { file: string; count: number }[];
-  /*
-   * TODO(feat): Add byCategory to statistics.
-   * Add: byCategory: { category: string; count: number }[]
-   * Query: SELECT category, COUNT(*) as count FROM todos GROUP BY category
-   */
+  byCategory: { category: string; count: number }[];
 }
 
 export async function getTodoStats(): Promise<TodoStats> {
@@ -152,6 +146,7 @@ export async function getTodoStats(): Promise<TodoStats> {
       'SELECT COUNT(*) as total FROM todos',
       'SELECT tag, COUNT(*) as count FROM todos GROUP BY tag ORDER BY count DESC',
       'SELECT file, COUNT(*) as count FROM todos GROUP BY file ORDER BY count DESC LIMIT 20',
+      'SELECT category, COUNT(*) as count FROM todos WHERE category IS NOT NULL GROUP BY category ORDER BY count DESC',
     ],
     'read',
   );
@@ -159,10 +154,12 @@ export async function getTodoStats(): Promise<TodoStats> {
   const totalResult = results[0];
   const tagResult = results[1];
   const fileResult = results[2];
+  const categoryResult = results[3];
 
   return {
     total: Number(totalResult?.rows[0]?.total ?? 0),
     byTag: (tagResult?.rows ?? []).map((r) => ({ tag: String(r.tag), count: Number(r.count) })),
     byFile: (fileResult?.rows ?? []).map((r) => ({ file: String(r.file), count: Number(r.count) })),
+    byCategory: (categoryResult?.rows ?? []).map((r) => ({ category: String(r.category), count: Number(r.count) })),
   };
 }

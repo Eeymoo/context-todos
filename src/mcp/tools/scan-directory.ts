@@ -39,7 +39,7 @@ export function registerScanDirectory(server: McpServer) {
           };
         }
 
-        const files = collectFiles(absDir, extensions);
+        const files = await collectFiles(absDir, extensions);
         const allTodos: TodoItem[] = [];
 
         for (const file of files) {
