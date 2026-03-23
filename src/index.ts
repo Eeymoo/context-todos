@@ -26,6 +26,7 @@ program
   .option('--labs', 'Enable Labs mode (experimental features)')
   .option('--use-gitignore', 'Use .gitignore to filter files', true)
   .option('--gitignore-path <path>', 'Custom path to gitignore file (default: .gitignore)')
+  .option('--filter <patterns>', 'Comma-separated patterns to exclude (e.g., "*.test.ts,*.spec.ts,__tests__/**")')
   .action(async (options) => {
     let mode: ServerMode;
     if (options.labs && options.max) {
@@ -45,6 +46,7 @@ program
       watchPath: options.watch as string,
       useGitignore: options.useGitignore as boolean,
       ...(options.gitignorePath && { gitignorePath: options.gitignorePath as string }),
+      ...(options.filter && { filter: options.filter as string }),
     };
 
     const { server, totalTodos } = await createServer(serverOptions);
