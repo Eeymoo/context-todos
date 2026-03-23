@@ -6,6 +6,7 @@ import { registerListTodos } from '../../src/mcp/tools/list-todos.js';
 import { initDb, getDb } from '../../src/mcp/db.js';
 import { scanFile } from '../../src/mcp/scanner.js';
 import { syncFileTodos } from '../../src/mcp/db.js';
+import { setFormatter } from '../../src/mcp/formatter.js';
 
 class MockMcpServer {
   tools: Map<string, { schema: unknown; handler: (args: unknown) => Promise<unknown> }> = new Map();
@@ -31,7 +32,8 @@ describe('list-todos tool', () => {
     testDir = join(tmpdir(), `list-todos-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
     mockServer = new MockMcpServer();
-    
+    setFormatter('toon');
+
     await initDb(testDir);
   });
 
@@ -306,7 +308,7 @@ describe('list-todos tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toContain('[TODO]');
       expect(text).toContain('format.ts');

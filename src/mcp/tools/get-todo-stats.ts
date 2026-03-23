@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getTodoStats } from '../db.js';
+import { getFormatter } from '../formatter.js';
 
 export function registerGetTodoStats(server: McpServer) {
   server.registerTool(
@@ -18,19 +19,14 @@ export function registerGetTodoStats(server: McpServer) {
           };
         }
 
-        const tagLines = stats.byTag
-          .map((t) => `  ${t.tag}: ${t.count}`)
-          .join('\n');
+        const formattedStats = {
+          total: stats.total,
+          byTag: Object.fromEntries(stats.byTag.map(t => [t.tag, t.count])),
+          byCategory: Object.fromEntries(stats.byCategory.map(c => [c.category ?? '(none)', c.count])),
+          topFiles: stats.byFile.map(f => ({ file: f.file, count: f.count })),
+        };
 
-        const categoryLines = stats.byCategory.length > 0
-          ? stats.byCategory.map((c) => `  ${c.category}: ${c.count}`).join('\n')
-          : '  (none)';
-
-        const fileLines = stats.byFile
-          .map((f) => `  ${f.file}: ${f.count}`)
-          .join('\n');
-
-        const text = `Total TODOs: ${stats.total}\n\nBy Tag:\n${tagLines}\n\nBy Category:\n${categoryLines}\n\nTop Files:\n${fileLines}`;
+        const text = getFormatter().formatStats(formattedStats);
 
         return {
           content: [{ type: 'text' as const, text }],

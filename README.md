@@ -238,6 +238,48 @@ npx @eeymoo/context-todos mcp --labs
 npx @eeymoo/context-todos mcp --labs --max
 ```
 
+### Output Format
+
+Use the `--format` option to change the output format:
+
+```bash
+# Default format (toon) - compact single-line format
+npx @eeymoo/context-todos mcp --format toon
+
+# JSON format - structured JSON output
+npx @eeymoo/context-todos mcp --format json
+
+# Pretty format - human-readable with indentation
+npx @eeymoo/context-todos mcp --format pretty
+```
+
+| Format | Description |
+|--------|-------------|
+| `toon` | Compact single-line format (default) |
+| `json` | Full JSON structure for programmatic use |
+| `pretty` | Multi-line format with indentation |
+
+### File Filtering
+
+Use `--filter` to exclude files matching specific patterns:
+
+```bash
+# Exclude test files
+npx @eeymoo/context-todos mcp --filter "*.test.ts,*.spec.ts"
+
+# Exclude test directories and config files
+npx @eeymoo/context-todos mcp --filter "__tests__/**,*.config.ts"
+
+# Combine with gitignore (enabled by default)
+npx @eeymoo/context-todos mcp --use-gitignore --filter "*.test.ts"
+```
+
+| Option | Description |
+|--------|-------------|
+| `--filter <patterns>` | Comma-separated glob patterns to exclude |
+| `--use-gitignore` | Use .gitignore to filter files (default: true) |
+| `--gitignore-path <path>` | Custom gitignore file path |
+
 ### MCP Tools
 
 #### `scan-file`
