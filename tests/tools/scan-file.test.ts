@@ -3,7 +3,7 @@ import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { registerScanFile } from '../../src/mcp/tools/scan-file.js';
-import { createFormatter } from '../../src/mcp/formatter.js';
+import { setFormatter } from '../../src/mcp/formatter.js';
 
 // Mock MCP Server for testing
 class MockMcpServer {
@@ -25,13 +25,12 @@ class MockMcpServer {
 describe('scan-file tool', () => {
   let testDir: string;
   let mockServer: MockMcpServer;
-  let formatter: ReturnType<typeof createFormatter>;
 
   beforeEach(() => {
     testDir = join(tmpdir(), `scan-file-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
     mockServer = new MockMcpServer();
-    formatter = createFormatter('toon');
+    setFormatter('toon');
   });
 
   afterEach(() => {
@@ -42,7 +41,7 @@ describe('scan-file tool', () => {
 
   describe('tool registration', () => {
     it('should register scan-file tool with correct schema', () => {
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
 
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
@@ -61,13 +60,13 @@ const x = 1;
 `,
       );
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: testFile });
       expect(result).toBeDefined();
-      
+
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
       expect(content.length).toBeGreaterThan(0);
@@ -89,10 +88,10 @@ const x = 1;
 `,
       );
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: testFile });
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
@@ -108,10 +107,10 @@ const x = 1;
 `,
       );
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: testFile });
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
@@ -129,10 +128,10 @@ const y = 2;
 `,
       );
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: testFile });
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
@@ -146,10 +145,10 @@ const y = 2;
       const testFile = join(testDir, 'test.xyz');
       writeFileSync(testFile, '// TODO: This should be ignored\n');
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: testFile });
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
@@ -162,10 +161,10 @@ const y = 2;
       const testFile = join(testDir, 'test');
       writeFileSync(testFile, '// TODO: This should be ignored\n');
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: testFile });
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
@@ -179,10 +178,10 @@ const y = 2;
     it('should handle file read errors gracefully', async () => {
       const nonExistentFile = join(testDir, 'nonexistent.ts');
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: nonExistentFile });
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
@@ -200,10 +199,10 @@ const y = 2;
 `,
       );
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: testFile });
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
@@ -221,10 +220,10 @@ const y = 2;
 `,
       );
 
-      registerScanFile(mockServer as never, formatter);
+      registerScanFile(mockServer as never);
       const tool = mockServer.getTool('scan-file');
       expect(tool).toBeDefined();
-      
+
       const result = await tool!.handler({ path: testFile });
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();

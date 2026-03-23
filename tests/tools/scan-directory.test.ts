@@ -3,7 +3,7 @@ import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { registerScanDirectory } from '../../src/mcp/tools/scan-directory.js';
-import { createFormatter } from '../../src/mcp/formatter.js';
+import { setFormatter } from '../../src/mcp/formatter.js';
 
 class MockMcpServer {
   tools: Map<string, { schema: unknown; handler: (args: unknown) => Promise<unknown> }> = new Map();
@@ -24,13 +24,12 @@ class MockMcpServer {
 describe('scan-directory tool', () => {
   let testDir: string;
   let mockServer: MockMcpServer;
-  let formatter: ReturnType<typeof createFormatter>;
 
   beforeEach(() => {
     testDir = join(tmpdir(), `scan-directory-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
     mockServer = new MockMcpServer();
-    formatter = createFormatter('toon');
+    setFormatter('toon');
   });
 
   afterEach(() => {
@@ -41,7 +40,7 @@ describe('scan-directory tool', () => {
 
   describe('tool registration', () => {
     it('should register scan-directory tool with correct schema', () => {
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
 
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
@@ -64,7 +63,7 @@ const y = 2;
 `,
       );
 
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -88,7 +87,7 @@ const y = 2;
 `,
       );
 
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -107,7 +106,7 @@ const y = 2;
       writeFileSync(join(level1, 'level1.ts'), '// TODO: Level 1\n');
       writeFileSync(join(level2, 'level2.ts'), '// TODO: Level 2\n');
 
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -123,7 +122,7 @@ const y = 2;
 
   describe('scanning empty directory', () => {
     it('should return "No TODOs found" message for empty directory', async () => {
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -137,7 +136,7 @@ const y = 2;
     it('should return "No TODOs found" for directory with files but no TODOs', async () => {
       writeFileSync(join(testDir, 'clean.ts'), 'const x = 1;\n');
 
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -154,7 +153,7 @@ const y = 2;
       writeFileSync(join(testDir, 'file.js'), '// TODO: JavaScript\n');
       writeFileSync(join(testDir, 'file.py'), '# TODO: Python\n');
 
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -172,7 +171,7 @@ const y = 2;
       writeFileSync(join(testDir, 'file.js'), '// TODO: JavaScript\n');
       writeFileSync(join(testDir, 'file.py'), '# TODO: Python\n');
 
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -191,7 +190,7 @@ const y = 2;
       const testFile = join(testDir, 'file.ts');
       writeFileSync(testFile, '// TODO: Test\n');
 
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -203,7 +202,7 @@ const y = 2;
     });
 
     it('should handle scan errors gracefully', async () => {
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -217,7 +216,7 @@ const y = 2;
 
   describe('default path handling', () => {
     it('should use current directory when path is omitted', async () => {
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 
@@ -237,7 +236,7 @@ const y = 2;
 `,
       );
 
-      registerScanDirectory(mockServer as never, formatter);
+      registerScanDirectory(mockServer as never);
       const tool = mockServer.getTool('scan-directory');
       expect(tool).toBeDefined();
 

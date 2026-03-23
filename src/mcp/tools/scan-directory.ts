@@ -4,9 +4,9 @@ import { resolve, relative } from 'node:path';
 import { statSync } from 'node:fs';
 import { collectFiles, scanFile } from '../scanner.js';
 import type { TodoItem } from '../types.js';
-import type { Formatter } from '../formatter.js';
+import { getFormatter } from '../formatter.js';
 
-export function registerScanDirectory(server: McpServer, formatter: Formatter) {
+export function registerScanDirectory(server: McpServer) {
   server.registerTool(
     'scan-directory',
     {
@@ -58,7 +58,7 @@ export function registerScanDirectory(server: McpServer, formatter: Formatter) {
           };
         }
 
-        const formatted = formatter.formatTodos(allTodos);
+        const formatted = getFormatter().formatTodos(allTodos);
 
         return {
           content: [

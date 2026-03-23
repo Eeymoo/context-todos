@@ -6,7 +6,7 @@ import { registerListTodos } from '../../src/mcp/tools/list-todos.js';
 import { initDb, getDb } from '../../src/mcp/db.js';
 import { scanFile } from '../../src/mcp/scanner.js';
 import { syncFileTodos } from '../../src/mcp/db.js';
-import { createFormatter } from '../../src/mcp/formatter.js';
+import { setFormatter } from '../../src/mcp/formatter.js';
 
 class MockMcpServer {
   tools: Map<string, { schema: unknown; handler: (args: unknown) => Promise<unknown> }> = new Map();
@@ -27,13 +27,12 @@ class MockMcpServer {
 describe('list-todos tool', () => {
   let testDir: string;
   let mockServer: MockMcpServer;
-  let formatter: ReturnType<typeof createFormatter>;
 
   beforeEach(async () => {
     testDir = join(tmpdir(), `list-todos-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
     mockServer = new MockMcpServer();
-    formatter = createFormatter('toon');
+    setFormatter('toon');
 
     await initDb(testDir);
   });
@@ -53,7 +52,7 @@ describe('list-todos tool', () => {
 
   describe('tool registration', () => {
     it('should register list-todos tool with correct schema', () => {
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
 
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
@@ -73,7 +72,7 @@ describe('list-todos tool', () => {
       const todos2 = await scanFile(file2);
       await syncFileTodos('file2.ts', todos2);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -87,7 +86,7 @@ describe('list-todos tool', () => {
     });
 
     it('should return message when database is empty', async () => {
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -112,7 +111,7 @@ describe('list-todos tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('mixed.ts', todos);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -131,7 +130,7 @@ describe('list-todos tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('file.ts', todos);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -154,7 +153,7 @@ describe('list-todos tool', () => {
       const todos2 = await scanFile(file2);
       await syncFileTodos('util.ts', todos2);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -172,7 +171,7 @@ describe('list-todos tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('file.ts', todos);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -198,7 +197,7 @@ describe('list-todos tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('many.ts', todos);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -220,7 +219,7 @@ describe('list-todos tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('many.ts', todos);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -231,7 +230,7 @@ describe('list-todos tool', () => {
     });
 
     it('should use default limit of 100', async () => {
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -257,7 +256,7 @@ describe('list-todos tool', () => {
       const todos2 = await scanFile(file2);
       await syncFileTodos('util.ts', todos2);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -284,7 +283,7 @@ describe('list-todos tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('test.ts', todos);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -302,14 +301,14 @@ describe('list-todos tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('format.ts', todos);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toContain('[TODO]');
       expect(text).toContain('format.ts');
@@ -323,7 +322,7 @@ describe('list-todos tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('withref.ts', todos);
 
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 
@@ -336,7 +335,7 @@ describe('list-todos tool', () => {
 
   describe('error handling', () => {
     it('should handle database errors gracefully', async () => {
-      registerListTodos(mockServer as never, formatter);
+      registerListTodos(mockServer as never);
       const tool = mockServer.getTool('list-todos');
       expect(tool).toBeDefined();
 

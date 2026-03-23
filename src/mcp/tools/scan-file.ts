@@ -2,9 +2,9 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { resolve, extname } from 'node:path';
 import { isExtensionSupported, scanFile } from '../scanner.js';
-import type { Formatter } from '../formatter.js';
+import { getFormatter } from '../formatter.js';
 
-export function registerScanFile(server: McpServer, formatter: Formatter) {
+export function registerScanFile(server: McpServer) {
   server.registerTool(
     'scan-file',
     {
@@ -41,7 +41,7 @@ export function registerScanFile(server: McpServer, formatter: Formatter) {
           };
         }
 
-        const formatted = formatter.formatTodos(todos);
+        const formatted = getFormatter().formatTodos(todos);
 
         return {
           content: [

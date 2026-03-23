@@ -12,6 +12,8 @@ export interface Formatter {
   }): string;
 }
 
+let currentFormatter: Formatter;
+
 function formatTodoItem(item: TodoItem): string {
   let line = '[' + item.tag + (item.category ? '(' + item.category + ')' : '') + '] ' + item.file + ':' + item.line + ' - ' + item.text;
   if (item.ref) {
@@ -77,7 +79,7 @@ function createPrettyFormatter(): Formatter {
   };
 }
 
-export function createFormatter(format: OutputFormat = 'toon'): Formatter {
+function createFormatter(format: OutputFormat = 'toon'): Formatter {
   switch (format) {
     case 'json':
       return createJsonFormatter();
@@ -87,4 +89,15 @@ export function createFormatter(format: OutputFormat = 'toon'): Formatter {
     default:
       return createToonFormatter();
   }
+}
+
+export function setFormatter(format: OutputFormat = 'toon'): void {
+  currentFormatter = createFormatter(format);
+}
+
+export function getFormatter(): Formatter {
+  if (!currentFormatter) {
+    currentFormatter = createFormatter('toon');
+  }
+  return currentFormatter;
 }

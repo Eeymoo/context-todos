@@ -1,9 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { queryTodos } from '../db.js';
-import type { Formatter } from '../formatter.js';
+import { getFormatter } from '../formatter.js';
 
-export function registerListTodos(server: McpServer, formatter: Formatter) {
+export function registerListTodos(server: McpServer) {
   server.registerTool(
     'list-todos',
     {
@@ -34,7 +34,7 @@ export function registerListTodos(server: McpServer, formatter: Formatter) {
           };
         }
 
-        const formatted = formatter.formatTodos(todos);
+        const formatted = getFormatter().formatTodos(todos);
 
         return {
           content: [

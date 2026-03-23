@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getTodoStats } from '../db.js';
-import type { Formatter } from '../formatter.js';
+import { getFormatter } from '../formatter.js';
 
-export function registerGetTodoStats(server: McpServer, formatter: Formatter) {
+export function registerGetTodoStats(server: McpServer) {
   server.registerTool(
     'get-todo-stats',
     {
@@ -26,7 +26,7 @@ export function registerGetTodoStats(server: McpServer, formatter: Formatter) {
           topFiles: stats.byFile.map(f => ({ file: f.file, count: f.count })),
         };
 
-        const text = formatter.formatStats(formattedStats);
+        const text = getFormatter().formatStats(formattedStats);
 
         return {
           content: [{ type: 'text' as const, text }],

@@ -6,7 +6,7 @@ import { registerGetTodoStats } from '../../src/mcp/tools/get-todo-stats.js';
 import { initDb, getDb } from '../../src/mcp/db.js';
 import { scanFile } from '../../src/mcp/scanner.js';
 import { syncFileTodos } from '../../src/mcp/db.js';
-import { createFormatter } from '../../src/mcp/formatter.js';
+import { setFormatter } from '../../src/mcp/formatter.js';
 
 class MockMcpServer {
   tools: Map<string, { schema: unknown; handler: (args: unknown) => Promise<unknown> }> = new Map();
@@ -27,13 +27,12 @@ class MockMcpServer {
 describe('get-todo-stats tool', () => {
   let testDir: string;
   let mockServer: MockMcpServer;
-  let formatter: ReturnType<typeof createFormatter>;
 
   beforeEach(async () => {
     testDir = join(tmpdir(), `get-todo-stats-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
     mockServer = new MockMcpServer();
-    formatter = createFormatter('toon');
+    setFormatter('toon');
 
     await initDb(testDir);
   });
@@ -53,7 +52,7 @@ describe('get-todo-stats tool', () => {
 
   describe('tool registration', () => {
     it('should register get-todo-stats tool with correct schema', () => {
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
 
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
@@ -63,7 +62,7 @@ describe('get-todo-stats tool', () => {
 
   describe('stats when no todos exist', () => {
     it('should return "No TODOs in database" message', async () => {
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
@@ -92,7 +91,7 @@ describe('get-todo-stats tool', () => {
       const todos2 = await scanFile(file2);
       await syncFileTodos('file2.ts', todos2);
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
@@ -114,14 +113,14 @@ describe('get-todo-stats tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('mixed.ts', todos);
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toContain('By Tag:');
       expect(text).toContain('TODO: 2');
@@ -145,14 +144,14 @@ describe('get-todo-stats tool', () => {
       const todos2 = await scanFile(file2);
       await syncFileTodos('file2.ts', todos2);
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toContain('Top Files:');
       expect(text).toContain('file1.ts: 3');
@@ -173,18 +172,18 @@ describe('get-todo-stats tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('tags.ts', todos);
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       const byTagSection = text.split('By Tag:')[1]?.split('Top Files:')[0];
       expect(byTagSection).toBeDefined();
-      
+
       const lines = byTagSection!.trim().split('\n');
       expect(lines.length).toBeGreaterThanOrEqual(2);
       expect(lines[0]).toContain('TODO: 3');
@@ -213,18 +212,18 @@ describe('get-todo-stats tool', () => {
       const todos3 = await scanFile(file3);
       await syncFileTodos('some.ts', todos3);
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       const topFilesSection = text.split('Top Files:')[1];
       expect(topFilesSection).toBeDefined();
-      
+
       const lines = topFilesSection!.trim().split('\n');
       expect(lines[0]).toContain('many.ts: 3');
       expect(lines[1]).toContain('some.ts: 2');
@@ -239,18 +238,18 @@ describe('get-todo-stats tool', () => {
         await syncFileTodos(`file${i}.ts`, todos);
       }
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       const topFilesSection = text.split('Top Files:')[1];
       expect(topFilesSection).toBeDefined();
-      
+
       const lines = topFilesSection!.trim().split('\n');
       expect(lines.length).toBeLessThanOrEqual(20);
     });
@@ -263,14 +262,14 @@ describe('get-todo-stats tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('test.ts', todos);
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toMatch(/^Total TODOs: \d+/);
       expect(text).toContain('\n\nBy Tag:\n');
@@ -283,14 +282,14 @@ describe('get-todo-stats tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('test.ts', todos);
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toMatch(/  \w+: \d+/);
     });
@@ -301,14 +300,14 @@ describe('get-todo-stats tool', () => {
       const todos = await scanFile(file);
       await syncFileTodos('test.ts', todos);
 
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toMatch(/  [\w./]+: \d+/);
     });
@@ -316,7 +315,7 @@ describe('get-todo-stats tool', () => {
 
   describe('error handling', () => {
     it('should handle database errors gracefully', async () => {
-      registerGetTodoStats(mockServer as never, formatter);
+      registerGetTodoStats(mockServer as never);
       const tool = mockServer.getTool('get-todo-stats');
       expect(tool).toBeDefined();
 
