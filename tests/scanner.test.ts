@@ -69,12 +69,12 @@ const x = 1;
   });
 
   describe('collectFiles', () => {
-    it('should collect files from directory', () => {
+    it('should collect files from directory', async () => {
       writeFileSync(join(testDir, 'file1.ts'), '');
       writeFileSync(join(testDir, 'file2.js'), '');
       writeFileSync(join(testDir, 'file3.py'), '');
 
-      const files = collectFiles(testDir);
+      const files = await collectFiles(testDir);
 
       expect(files.length).toBe(3);
       expect(files.some((f) => f.endsWith('file1.ts'))).toBe(true);
@@ -82,12 +82,12 @@ const x = 1;
       expect(files.some((f) => f.endsWith('file3.py'))).toBe(true);
     });
 
-    it('should filter by extensions', () => {
+    it('should filter by extensions', async () => {
       writeFileSync(join(testDir, 'file1.ts'), '');
       writeFileSync(join(testDir, 'file2.js'), '');
       writeFileSync(join(testDir, 'file3.py'), '');
 
-      const files = collectFiles(testDir, ['.ts', '.js']);
+      const files = await collectFiles(testDir, ['.ts', '.js']);
 
       expect(files.length).toBe(2);
       expect(files.some((f) => f.endsWith('file1.ts'))).toBe(true);
@@ -95,13 +95,13 @@ const x = 1;
       expect(files.some((f) => f.endsWith('file3.py'))).toBe(false);
     });
 
-    it('should collect files recursively', () => {
+    it('should collect files recursively', async () => {
       const subDir = join(testDir, 'src');
       mkdirSync(subDir);
       writeFileSync(join(testDir, 'file1.ts'), '');
       writeFileSync(join(subDir, 'file2.ts'), '');
 
-      const files = collectFiles(testDir);
+      const files = await collectFiles(testDir);
 
       expect(files.length).toBe(2);
     });

@@ -6,7 +6,7 @@ export function registerGetTodoStats(server: McpServer) {
     'get-todo-stats',
     {
       title: 'Get TODO Statistics',
-      description: 'Returns aggregated statistics of all persisted TODOs: total count, breakdown by tag, and top files by TODO count.',
+      description: 'Returns aggregated statistics of all persisted TODOs: total count, breakdown by tag, category, and top files by TODO count.',
     },
     async () => {
       try {
@@ -22,11 +22,15 @@ export function registerGetTodoStats(server: McpServer) {
           .map((t) => `  ${t.tag}: ${t.count}`)
           .join('\n');
 
+        const categoryLines = stats.byCategory.length > 0
+          ? stats.byCategory.map((c) => `  ${c.category}: ${c.count}`).join('\n')
+          : '  (none)';
+
         const fileLines = stats.byFile
           .map((f) => `  ${f.file}: ${f.count}`)
           .join('\n');
 
-        const text = `Total TODOs: ${stats.total}\n\nBy Tag:\n${tagLines}\n\nTop Files:\n${fileLines}`;
+        const text = `Total TODOs: ${stats.total}\n\nBy Tag:\n${tagLines}\n\nBy Category:\n${categoryLines}\n\nTop Files:\n${fileLines}`;
 
         return {
           content: [{ type: 'text' as const, text }],

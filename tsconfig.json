@@ -1,15 +1,9 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
+  "include": ["src/**/*"],
   "compilerOptions": {
     // File Layout
-    /*
-     * TODO(build): Enable rootDir to ensure consistent output structure.
-     * Currently, without rootDir, TypeScript preserves the src/ directory in dist/,
-     * resulting in dist/index.js instead of dist/src/index.js.
-     * This causes a mismatch with package.json paths (bin, main, exports).
-     * Uncomment the line below to fix the build output paths:
-     */
-    // "rootDir": "./src",
+    "rootDir": "./src",
     "outDir": "./dist",
 
     // Environment Settings
