@@ -73,7 +73,14 @@ export async function syncFileTodos(file: string, todos: TodoItem[]): Promise<vo
 
 export async function removeFileTodos(file: string): Promise<void> {
   const db = getDb();
-  await db.execute({ sql: 'DELETE FROM todos WHERE file = ?', args: [file] });
+  try {
+    await db.execute({ sql: 'DELETE FROM todos WHERE file = ?', args: [file] });
+  } catch (err: any) {
+    // Ignore CLIENT_CLOSED errors that occur during test cleanup
+    if (err?.code !== 'CLIENT_CLOSED') {
+      throw err;
+    }
+  }
 }
 
 export interface TodoQuery {
