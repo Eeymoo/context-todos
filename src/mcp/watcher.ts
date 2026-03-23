@@ -1,5 +1,5 @@
 import { watch, type FSWatcher } from 'chokidar';
-import { resolve, relative } from 'node:path';
+import { resolve, relative, extname } from 'node:path';
 import { scanFile } from './scanner.js';
 import type { TodoItem, FileChangeEvent, TodoWatcher } from './types.js';
 import type { GitignoreFilter } from './gitignore.js';
@@ -31,6 +31,13 @@ export function createWatcher(options?: {
       ignored: (filePath: string, stats?: { isFile(): boolean }) => {
         if (gitignoreFilter.ignores(relative(absPath, filePath))) return true;
         if (stats?.isFile() && extensions) {
+          /*
+           * TODO(bug): Using string split for extension extraction is unreliable.
+           * For files like 'archive.tar.gz' or 'component.test.tsx', this returns
+           * only the last segment ('.gz' or '.tsx') instead of the full extension.
+           * Should use extname() from 'node:path' for consistent behavior.
+           * Example fix: const ext = extname(filePath);
+           */
           const ext = '.' + filePath.split('.').pop();
           return !extensions.includes(ext);
         }

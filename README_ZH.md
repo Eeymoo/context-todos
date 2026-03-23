@@ -26,6 +26,93 @@ Context-Todos 帮助你追踪和管理整个项目中的代码注释。它扫描
 | `HACK` | 临时解决方案 |
 | `XXX` | 警告或有问题的代码 |
 
+### TODO 注释规范
+
+我们推荐使用结构化的 TODO 注释格式，以提高可读性并实现更好的分类：
+
+```
+TODO: 简短描述
+TODO(类别): 带类别的简短描述
+```
+
+`(类别)` 部分是**可选的**但**推荐使用**，以便更好地组织。两种格式都是有效的，都会被检测到。
+
+#### 推荐的类别
+
+| 类别 | 用途 |
+|------|------|
+| `bug` | 需要修复的 Bug |
+| `performance` | 性能优化 |
+| `security` | 安全相关问题 |
+| `ux` | 用户体验改进 |
+| `refactor` | 代码重构需求 |
+| `docs` | 文档更新 |
+| `test` | 缺失或改进测试 |
+| `feat` | 新功能实现 |
+| `build` | 构建/CI 相关问题 |
+
+#### 各语言示例
+
+**JavaScript / TypeScript / Node.js**
+```javascript
+// 简单格式
+// TODO: 为网络超时添加错误处理
+
+// 带类别格式
+/*
+ * TODO(performance): 将同步的 readdirSync 替换为异步的 fs.promises.readdir
+ * 以避免扫描大型项目时阻塞事件循环。
+ * 参考: https://nodejs.org/api/fs.html#fs_fspromises_readdir_path_options
+ */
+```
+
+**Python**
+```python
+# 简单格式
+# TODO: 为此函数添加类型注解
+
+# 带类别格式
+# TODO(security): 在数据库查询前对用户输入进行清理
+# 考虑使用参数化查询而不是字符串格式化。
+```
+
+**Rust**
+```rust
+// 简单格式
+// TODO: 为此结构体实现 Clone trait
+
+// 带类别格式
+/*
+ * TODO(security): 添加输入验证以防止缓冲区溢出
+ * 攻击发生在数据包解析器中。
+ */
+```
+
+**Java**
+```java
+// 简单格式
+// TODO: 将魔法数字提取为常量
+
+// 带类别格式
+/*
+ * TODO(performance): 缓存计算结果以避免
+ * 每次请求都重新计算。
+ * 考虑使用 Caffeine 或 Guava 缓存。
+ */
+```
+
+**C++**
+```cpp
+// 简单格式
+// TODO: 为边界情况添加单元测试
+
+// 带类别格式
+/*
+ * TODO(performance): 将原始指针替换为智能指针
+ * 以防止内存泄漏并改善所有权语义。
+ */
+```
+
 ### 支持的文件扩展名
 
 | 类别 | 扩展名 |

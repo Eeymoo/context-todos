@@ -4,6 +4,12 @@ import { resolve, extname, relative } from 'node:path';
 import type { TodoItem } from './types.js';
 import type { GitignoreFilter } from './gitignore.js';
 
+/*
+ * TODO(performance): Replace synchronous readdirSync with async fs.promises.readdir
+ * to avoid blocking the event loop when scanning large projects.
+ * Consider implementing an async generator pattern for better scalability.
+ * See: https://nodejs.org/api/fs.html#fs_fspromises_readdir_path_options
+ */
 export function collectFiles(
   dir: string,
   extensions?: string[],
@@ -50,6 +56,12 @@ export async function scanFile(filePath: string): Promise<TodoItem[]> {
     filename: filePath,
   });
 
+  /*
+   * TODO(feat): Extract category from todo text.
+   * Parse category from formats like "TODO(performance): description"
+   * Use regex: /^(TODO|FIXME|HACK|XXX)\((\w+)\):\s*(.*)$/
+   * Add category field to each todo item.
+   */
   return todos as TodoItem[];
 }
 

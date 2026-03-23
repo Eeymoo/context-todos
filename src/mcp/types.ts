@@ -1,3 +1,15 @@
+/*
+ * TODO(feat): Add category field to support parsing TODO(category) format.
+ * Category is optional and allows better organization of TODOs.
+ * Example: TODO(performance): optimize this function
+ *
+ * Planned changes:
+ * 1. Add `category?: string` field to TodoItem interface
+ * 2. Update scanner.ts to extract category from text using regex: /\((\w+)\)/
+ * 3. Update db.ts schema to add category column
+ * 4. Update query functions to support filtering by category
+ * 5. Add list-categories tool to list all used categories
+ */
 export interface TodoItem {
   file: string;
   tag: string;

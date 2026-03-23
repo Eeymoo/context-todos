@@ -10,6 +10,12 @@ export async function initDb(basePath: string = '.'): Promise<Client> {
   const dbPath = resolve(basePath, DB_FILE);
   client = createClient({ url: `file:${dbPath}` });
 
+  /*
+   * TODO(feat): Add category column to database schema.
+   * ALTER TABLE todos ADD COLUMN category TEXT
+   * Create index on category for efficient filtering
+   * Support migration from existing databases without category column
+   */
   await client.batch(
     [
       `CREATE TABLE IF NOT EXISTS todos (
@@ -77,6 +83,10 @@ export async function removeFileTodos(file: string): Promise<void> {
 export interface TodoQuery {
   tag?: string | undefined;
   file?: string | undefined;
+  /*
+   * TODO(feat): Add category filter support to query interface.
+   * Enable filtering by category: { category: 'performance' }
+   */
   limit?: number | undefined;
   offset?: number | undefined;
 }
@@ -127,6 +137,11 @@ export interface TodoStats {
   total: number;
   byTag: { tag: string; count: number }[];
   byFile: { file: string; count: number }[];
+  /*
+   * TODO(feat): Add byCategory to statistics.
+   * Add: byCategory: { category: string; count: number }[]
+   * Query: SELECT category, COUNT(*) as count FROM todos GROUP BY category
+   */
 }
 
 export async function getTodoStats(): Promise<TodoStats> {

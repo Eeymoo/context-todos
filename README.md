@@ -26,6 +26,93 @@ Context-Todos helps you track and manage code annotations across your entire pro
 | `HACK` | Temporary workarounds |
 | `XXX` | Warning or problematic code |
 
+### TODO Comment Convention
+
+We recommend using a structured format for TODO comments to improve readability and enable better categorization:
+
+```
+TODO: Brief description
+TODO(category): Brief description with category
+```
+
+The `(category)` part is **optional** but **recommended** for better organization. Both formats are valid and will be detected.
+
+#### Recommended Categories
+
+| Category | Purpose |
+|----------|---------|
+| `bug` | Bugs that need to be fixed |
+| `performance` | Performance improvements |
+| `security` | Security-related issues |
+| `ux` | User experience improvements |
+| `refactor` | Code refactoring needs |
+| `docs` | Documentation updates |
+| `test` | Missing or improved tests |
+| `feat` | New features to implement |
+| `build` | Build/CI related issues |
+
+#### Examples by Language
+
+**JavaScript / TypeScript / Node.js**
+```javascript
+// Simple format
+// TODO: Add error handling for network timeouts
+
+// With category
+/*
+ * TODO(performance): Replace synchronous readdirSync with async fs.promises.readdir
+ * to avoid blocking the event loop when scanning large projects.
+ * See: https://nodejs.org/api/fs.html#fs_fspromises_readdir_path_options
+ */
+```
+
+**Python**
+```python
+# Simple format
+# TODO: Add type hints to this function
+
+# With category
+# TODO(security): Sanitize user input before database query
+# Consider using parameterized queries instead of string formatting.
+```
+
+**Rust**
+```rust
+// Simple format
+// TODO: Implement Clone trait for this struct
+
+// With category
+/*
+ * TODO(security): Add input validation to prevent buffer overflow
+ * attacks in the packet parser.
+ */
+```
+
+**Java**
+```java
+// Simple format
+// TODO: Extract magic numbers to constants
+
+// With category
+/*
+ * TODO(performance): Cache the computed results to avoid
+ * recalculating on every request.
+ * Consider using Caffeine or Guava cache.
+ */
+```
+
+**C++**
+```cpp
+// Simple format
+// TODO: Add unit tests for edge cases
+
+// With category
+/*
+ * TODO(performance): Replace raw pointers with smart pointers
+ * to prevent memory leaks and improve ownership semantics.
+ */
+```
+
 ### Supported File Extensions
 
 | Category | Extensions |
