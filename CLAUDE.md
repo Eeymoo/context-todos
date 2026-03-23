@@ -44,7 +44,8 @@ pnpm inspector:dev        # Run with MCP inspector (development)
 
 ### Tools (`src/mcp/tools/`)
 Each tool is a self-contained module that registers itself with the McpServer:
-- `scan-file.ts`, `scan-directory.ts`, `list-extensions.ts` - Available in all modes
+- `scan-file.ts`, `list-extensions.ts` - Available in all modes
+- `scan-directory.ts` - Available in labs modes only (experimental)
 - `watch.ts`, `list-todos.ts` - Available in max modes only
 - `get-todo-stats.ts` - Available in labs-max mode only
 
@@ -56,10 +57,10 @@ The server supports four modes based on two dimensions:
 
 | Mode | CLI Flags | Features |
 |------|-----------|----------|
-| standard | (default) | Basic scanning tools |
-| labs-standard | `--labs` | Basic scanning tools (experimental mode) |
+| standard | (default) | Basic scanning tools (scan-file, list-extensions) |
+| labs-standard | `--labs` | Basic scanning tools + scan-directory (experimental) |
 | max | `--max` | + file watching + database persistence |
-| labs-max | `--labs --max` | + experimental `get-todo-stats` tool |
+| labs-max | `--labs --max` | + file watching + database persistence + get-todo-stats |
 
 ### Output Format
 Use the `--format` option to change output format: `toon` (default, compact), `json` (structured), or `pretty` (human-readable with indentation).

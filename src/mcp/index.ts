@@ -38,7 +38,10 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
   );
 
   registerScanFile(server);
-  registerScanDirectory(server);
+  // scan-directory is experimental, only available in labs modes
+  if (mode.includes('labs')) {
+    registerScanDirectory(server);
+  }
   registerListExtensions(server);
 
   if (config.enableWatcher) {
