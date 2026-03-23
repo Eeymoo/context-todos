@@ -3,6 +3,7 @@ import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { registerScanDirectory } from '../../src/mcp/tools/scan-directory.js';
+import { setFormatter } from '../../src/mcp/formatter.js';
 
 class MockMcpServer {
   tools: Map<string, { schema: unknown; handler: (args: unknown) => Promise<unknown> }> = new Map();
@@ -28,6 +29,7 @@ describe('scan-directory tool', () => {
     testDir = join(tmpdir(), `scan-directory-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
     mockServer = new MockMcpServer();
+    setFormatter('toon');
   });
 
   afterEach(() => {

@@ -12,12 +12,15 @@ import { collectFiles, scanFile } from './scanner.js';
 import type { ServerOptions } from './types.js';
 import { modeConfigs } from './types.js';
 import { createGitignoreFilter, createCustomFilter, combineFilters, type GitignoreFilter } from './gitignore.js';
+import { setFormatter } from './formatter.js';
 
 export async function createServer(options: ServerOptions = { mode: 'standard' }) {
   const { mode } = options;
   const config = modeConfigs[mode];
 
   const watchPath = resolve(options.watchPath ?? '.');
+
+  setFormatter(options.format);
 
   const gitignoreFilter: GitignoreFilter | null = options.useGitignore
     ? createGitignoreFilter(watchPath, options.gitignorePath)

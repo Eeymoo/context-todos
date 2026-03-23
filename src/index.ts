@@ -27,6 +27,7 @@ program
   .option('--use-gitignore', 'Use .gitignore to filter files', true)
   .option('--gitignore-path <path>', 'Custom path to gitignore file (default: .gitignore)')
   .option('--filter <patterns>', 'Comma-separated patterns to exclude (e.g., "*.test.ts,*.spec.ts,__tests__/**")')
+  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
   .action(async (options) => {
     let mode: ServerMode;
     if (options.labs && options.max) {
@@ -47,6 +48,7 @@ program
       useGitignore: options.useGitignore as boolean,
       ...(options.gitignorePath && { gitignorePath: options.gitignorePath as string }),
       ...(options.filter && { filter: options.filter as string }),
+      format: options.format as string,
     };
 
     const { server, totalTodos } = await createServer(serverOptions);

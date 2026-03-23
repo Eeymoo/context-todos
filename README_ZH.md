@@ -238,6 +238,48 @@ npx @eeymoo/context-todos mcp --labs
 npx @eeymoo/context-todos mcp --labs --max
 ```
 
+### 输出格式
+
+使用 `--format` 选项更改输出格式：
+
+```bash
+# 默认格式 (toon) - 紧凑单行格式
+npx @eeymoo/context-todos mcp --format toon
+
+# JSON 格式 - 结构化 JSON 输出
+npx @eeymoo/context-todos mcp --format json
+
+# Pretty 格式 - 带缩进的人类可读格式
+npx @eeymoo/context-todos mcp --format pretty
+```
+
+| 格式 | 描述 |
+|------|------|
+| `toon` | 紧凑单行格式（默认） |
+| `json` | 完整 JSON 结构，便于程序处理 |
+| `pretty` | 带缩进的多行格式 |
+
+### 文件过滤
+
+使用 `--filter` 排除匹配特定模式的文件：
+
+```bash
+# 排除测试文件
+npx @eeymoo/context-todos mcp --filter "*.test.ts,*.spec.ts"
+
+# 排除测试目录和配置文件
+npx @eeymoo/context-todos mcp --filter "__tests__/**,*.config.ts"
+
+# 与 gitignore 结合使用（默认启用）
+npx @eeymoo/context-todos mcp --use-gitignore --filter "*.test.ts"
+```
+
+| 选项 | 描述 |
+|------|------|
+| `--filter <patterns>` | 逗号分隔的 glob 模式，用于排除文件 |
+| `--use-gitignore` | 使用 .gitignore 过滤文件（默认：true） |
+| `--gitignore-path <path>` | 自定义 gitignore 文件路径 |
+
 ### MCP 工具
 
 #### `scan-file`

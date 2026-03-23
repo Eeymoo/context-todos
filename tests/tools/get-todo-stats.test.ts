@@ -6,6 +6,7 @@ import { registerGetTodoStats } from '../../src/mcp/tools/get-todo-stats.js';
 import { initDb, getDb } from '../../src/mcp/db.js';
 import { scanFile } from '../../src/mcp/scanner.js';
 import { syncFileTodos } from '../../src/mcp/db.js';
+import { setFormatter } from '../../src/mcp/formatter.js';
 
 class MockMcpServer {
   tools: Map<string, { schema: unknown; handler: (args: unknown) => Promise<unknown> }> = new Map();
@@ -31,7 +32,8 @@ describe('get-todo-stats tool', () => {
     testDir = join(tmpdir(), `get-todo-stats-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
     mockServer = new MockMcpServer();
-    
+    setFormatter('toon');
+
     await initDb(testDir);
   });
 
@@ -118,7 +120,7 @@ describe('get-todo-stats tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toContain('By Tag:');
       expect(text).toContain('TODO: 2');
@@ -149,7 +151,7 @@ describe('get-todo-stats tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toContain('Top Files:');
       expect(text).toContain('file1.ts: 3');
@@ -177,11 +179,11 @@ describe('get-todo-stats tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       const byTagSection = text.split('By Tag:')[1]?.split('Top Files:')[0];
       expect(byTagSection).toBeDefined();
-      
+
       const lines = byTagSection!.trim().split('\n');
       expect(lines.length).toBeGreaterThanOrEqual(2);
       expect(lines[0]).toContain('TODO: 3');
@@ -217,11 +219,11 @@ describe('get-todo-stats tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       const topFilesSection = text.split('Top Files:')[1];
       expect(topFilesSection).toBeDefined();
-      
+
       const lines = topFilesSection!.trim().split('\n');
       expect(lines[0]).toContain('many.ts: 3');
       expect(lines[1]).toContain('some.ts: 2');
@@ -243,11 +245,11 @@ describe('get-todo-stats tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       const topFilesSection = text.split('Top Files:')[1];
       expect(topFilesSection).toBeDefined();
-      
+
       const lines = topFilesSection!.trim().split('\n');
       expect(lines.length).toBeLessThanOrEqual(20);
     });
@@ -267,7 +269,7 @@ describe('get-todo-stats tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toMatch(/^Total TODOs: \d+/);
       expect(text).toContain('\n\nBy Tag:\n');
@@ -287,7 +289,7 @@ describe('get-todo-stats tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toMatch(/  \w+: \d+/);
     });
@@ -305,7 +307,7 @@ describe('get-todo-stats tool', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      
+
       const text = content![0]!.text;
       expect(text).toMatch(/  [\w./]+: \d+/);
     });
