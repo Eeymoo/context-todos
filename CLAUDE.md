@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Context-Todos is an MCP (Model Context Protocol) server that scans and manages TODO/FIXME/HACK/XXX comments in codebases. It provides tools for scanning files/directories, watching for changes, and storing TODOs in a database.
 
+## Claude Code行为准则
+
+1. **禁止直接向用户提问**：不得直接向用户提问，必须使用提问工具（AskUserQuestion）来收集用户偏好、澄清模糊指令或获取实施决策。
+2. **完成确认**：一旦确认任务完成，必须使用提问工具让用户确认。用户如果对结果不满意，可以提出反馈意见，然后你可以根据反馈进行改进并再次尝试，之后必须再次使用提问工具让用户确认。
+3. **使用MCP工具搜索TODO**：当需要搜索项目中的TODO/FIXME/HACK/XXX注释时，不得使用grep搜索，必须使用`@eeymoo/context-todos`这个MCP服务器提供的工具（如`scan-file`、`scan-directory`、`list-todos`）进行搜索。
+
 ## Commands
 
 ```bash
@@ -43,11 +49,25 @@ Each tool is a self-contained module that registers itself with the McpServer:
 - `get-todo-stats.ts` - Available in labs-max mode only
 
 ### Server Modes
+
+The server supports four modes based on two dimensions:
+- **Basic vs Full**: `--max` flag enables file watching and database persistence
+- **Standard vs Experimental**: `--labs` flag enables experimental features
+
 | Mode | CLI Flags | Features |
 |------|-----------|----------|
 | standard | (default) | Basic scanning tools |
+| labs-standard | `--labs` | Basic scanning tools (experimental mode) |
 | max | `--max` | + file watching + database persistence |
 | labs-max | `--labs --max` | + experimental `get-todo-stats` tool |
+
+### Output Format
+Use the `--format` option to change output format: `toon` (default, compact), `json` (structured), or `pretty` (human-readable with indentation).
+
+### File Filtering
+- `--filter <patterns>`: Comma-separated glob patterns to exclude (e.g., `"*.test.ts,*.spec.ts"`)
+- `--use-gitignore`: Use .gitignore to filter files (default: true)
+- `--gitignore-path <path>`: Custom gitignore file path
 
 ### Database
 - SQLite via libsql, stored as `.context-todos.db` in the watched directory
