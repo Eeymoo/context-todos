@@ -4,8 +4,9 @@ import { resolve, relative } from 'node:path';
 import { statSync } from 'node:fs';
 import { collectFiles, scanFile } from '../scanner.js';
 import type { TodoItem } from '../types.js';
+import type { Formatter } from '../formatter.js';
 
-export function registerScanDirectory(server: McpServer) {
+export function registerScanDirectory(server: McpServer, formatter: Formatter) {
   server.registerTool(
     'scan-directory',
     {
@@ -57,15 +58,7 @@ export function registerScanDirectory(server: McpServer) {
           };
         }
 
-        const formatted = allTodos
-          .map((item) => {
-            let line = '[' + item.tag + '] ' + item.file + ':' + item.line + ' - ' + item.text;
-            if (item.ref) {
-              line = line + ' (ref: ' + item.ref + ')';
-            }
-            return line;
-          })
-          .join('\n');
+        const formatted = formatter.formatTodos(allTodos);
 
         return {
           content: [

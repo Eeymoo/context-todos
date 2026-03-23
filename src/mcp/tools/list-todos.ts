@@ -1,8 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { queryTodos } from '../db.js';
+import type { Formatter } from '../formatter.js';
 
-export function registerListTodos(server: McpServer) {
+export function registerListTodos(server: McpServer, formatter: Formatter) {
   server.registerTool(
     'list-todos',
     {
@@ -33,15 +34,7 @@ export function registerListTodos(server: McpServer) {
           };
         }
 
-        const formatted = todos
-          .map((todo) => {
-            let line = '[' + todo.tag + (todo.category ? '(' + todo.category + ')' : '') + '] ' + todo.file + ':' + todo.line + ' - ' + todo.text;
-            if (todo.ref) {
-              line = line + ' (ref: ' + todo.ref + ')';
-            }
-            return line;
-          })
-          .join('\n');
+        const formatted = formatter.formatTodos(todos);
 
         return {
           content: [

@@ -48,6 +48,8 @@ export const modeConfigs: Record<ServerMode, ModeConfig> = {
     enableGetTodoStats: true,
   },
 };
+import type { OutputFormat } from './formatter.js';
+
 export interface ServerOptions {
   mode: ServerMode;
   watchPath?: string;
@@ -55,4 +57,5 @@ export interface ServerOptions {
   useGitignore?: boolean;
   gitignorePath?: string;
   filter?: string;
+  format?: OutputFormat;
 }

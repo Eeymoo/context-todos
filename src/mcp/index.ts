@@ -12,12 +12,15 @@ import { collectFiles, scanFile } from './scanner.js';
 import type { ServerOptions } from './types.js';
 import { modeConfigs } from './types.js';
 import { createGitignoreFilter, createCustomFilter, combineFilters, type GitignoreFilter } from './gitignore.js';
+import { createFormatter, type Formatter } from './formatter.js';
 
 export async function createServer(options: ServerOptions = { mode: 'standard' }) {
   const { mode } = options;
   const config = modeConfigs[mode];
 
   const watchPath = resolve(options.watchPath ?? '.');
+
+  const formatter: Formatter = createFormatter(options.format);
 
   const gitignoreFilter: GitignoreFilter | null = options.useGitignore
     ? createGitignoreFilter(watchPath, options.gitignorePath)
@@ -34,8 +37,8 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
     { capabilities: { logging: {} } },
   );
 
-  registerScanFile(server);
-  registerScanDirectory(server);
+  registerScanFile(server, formatter);
+  registerScanDirectory(server, formatter);
   registerListExtensions(server);
 
   if (config.enableWatcher) {
@@ -43,7 +46,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
   }
 
   if (config.enableDatabase) {
-    registerListTodos(server);
+    registerListTodos(server, formatter);
     await initDb(watchPath);
 
     const files = await collectFiles(watchPath, undefined, combinedFilter);
@@ -96,7 +99,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
       });
 
     if (config.enableGetTodoStats) {
-      registerGetTodoStats(server);
+      registerGetTodoStats(server, formatter);
     }
 
     return { server, totalTodos };
