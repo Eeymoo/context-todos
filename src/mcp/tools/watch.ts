@@ -2,12 +2,19 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { createWatcher } from '../watcher.js';
 import type { GitignoreFilter } from '../gitignore.js';
+import type { ScanFileOptions } from '../scanner.js';
 
 export function registerWatchTools(
   server: McpServer,
-  gitignoreFilter?: GitignoreFilter
+  gitignoreFilter?: GitignoreFilter,
+  scanOptions?: ScanFileOptions
 ) {
-  const watcher = createWatcher(gitignoreFilter ? { gitignoreFilter } : undefined);
+  const watcherOptions = gitignoreFilter
+    ? { gitignoreFilter, ...(scanOptions && { scanOptions }) }
+    : scanOptions
+      ? { scanOptions }
+      : undefined;
+  const watcher = createWatcher(watcherOptions);
 
   server.registerTool(
     'start-watching',

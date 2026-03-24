@@ -1,15 +1,17 @@
 import { watch, type FSWatcher } from 'chokidar';
 import { resolve, relative, extname } from 'node:path';
-import { scanFile } from './scanner.js';
+import { scanFile, type ScanFileOptions } from './scanner.js';
 import type { TodoItem, FileChangeEvent, TodoWatcher } from './types.js';
 import type { GitignoreFilter } from './gitignore.js';
 
 export function createWatcher(options?: {
   maxChanges?: number;
   gitignoreFilter?: GitignoreFilter;
+  scanOptions?: ScanFileOptions;
 }): TodoWatcher {
   const maxChanges = options?.maxChanges ?? 200;
   const gitignoreFilter = options?.gitignoreFilter ?? { ignores: () => false, ignoresDir: () => false };
+  const scanOptions = options?.scanOptions;
   let fsWatcher: FSWatcher | null = null;
   let changes: FileChangeEvent[] = [];
 
@@ -44,7 +46,7 @@ export function createWatcher(options?: {
       let todos: TodoItem[] = [];
       if (type !== 'unlink') {
         try {
-          todos = await scanFile(filePath);
+          todos = await scanFile(filePath, scanOptions);
         } catch {
           // atomic write during file may be temporarily unreadable
         }

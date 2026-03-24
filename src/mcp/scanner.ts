@@ -70,6 +70,7 @@ function extractContinuationText(
 
   for (let i = todoLineIndex + 1; i < lines.length; i++) {
     const line = lines[i];
+    if (!line) break;
 
     // Check for end of block comment
     if (commentStyle === 'block' && line.includes('*/')) {
@@ -137,7 +138,11 @@ export async function collectFiles(
   return files;
 }
 
-export async function scanFile(filePath: string): Promise<TodoItem[]> {
+export interface ScanFileOptions {
+  blockComment?: boolean;
+}
+
+export async function scanFile(filePath: string, options?: ScanFileOptions): Promise<TodoItem[]> {
   const ext = extname(filePath);
   if (!ext || !isExtensionSupported(ext)) {
     return [];
@@ -151,9 +156,11 @@ export async function scanFile(filePath: string): Promise<TodoItem[]> {
   });
 
   return (todos as TodoItem[]).map((todo) => {
-    // Extract continuation text for multi-line TODOs
+    // Extract continuation text for multi-line TODOs (only when blockComment is enabled)
     const todoLineIndex = todo.line - 1; // Convert 1-indexed to 0-indexed
-    const continuationText = extractContinuationText(lines, todoLineIndex);
+    const continuationText = options?.blockComment === true
+      ? extractContinuationText(lines, todoLineIndex)
+      : '';
 
     // Combine original text with continuation
     const finalText = continuationText ? `${todo.text}\n${continuationText}` : todo.text;

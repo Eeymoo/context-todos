@@ -2,11 +2,11 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { resolve, relative } from 'node:path';
 import { statSync } from 'node:fs';
-import { collectFiles, scanFile } from '../scanner.js';
+import { collectFiles, scanFile, type ScanFileOptions } from '../scanner.js';
 import type { TodoItem } from '../types.js';
 import { getFormatter } from '../formatter.js';
 
-export function registerScanDirectory(server: McpServer) {
+export function registerScanDirectory(server: McpServer, scanOptions?: ScanFileOptions) {
   server.registerTool(
     'scan-directory',
     {
@@ -44,7 +44,7 @@ export function registerScanDirectory(server: McpServer) {
         const allTodos: TodoItem[] = [];
 
         for (const file of files) {
-          const todos = await scanFile(file);
+          const todos = await scanFile(file, scanOptions);
           for (const todo of todos) {
             allTodos.push({ ...todo, file: relative(absDir, file) });
           }

@@ -24,6 +24,7 @@ program
   .option('--stdio', 'Force stdio mode instead of SSE')
   .option('--max', 'Enable Max mode (watcher + database persistence)')
   .option('--labs', 'Enable Labs mode (experimental features)')
+  .option('--block-comment', 'Enable multiline TODO parsing (requires --labs)')
   .option('--use-gitignore', 'Use .gitignore to filter files', true)
   .option('--gitignore-path <path>', 'Custom path to gitignore file (default: .gitignore)')
   .option('--filter <patterns>', 'Comma-separated patterns to exclude (e.g., "*.test.ts,*.spec.ts,__tests__/**")')
@@ -31,6 +32,12 @@ program
   .option('--log', 'Enable log output')
   .option('--log-filter <pattern>', 'Filter logs by pattern')
   .action(async (options) => {
+    // block-comment requires --labs mode
+    if (options.blockComment && !options.labs) {
+      logger.warn('--block-comment requires --labs mode, ignoring --block-comment');
+      options.blockComment = false;
+    }
+
     let mode: ServerMode;
     if (options.labs && options.max) {
       mode = 'labs-max';
@@ -53,6 +60,7 @@ program
       format: options.format as string,
       ...(options.log && { log: options.log as boolean }),
       ...(options.logFilter && { logFilter: options.logFilter as string }),
+      ...(options.blockComment && { blockComment: options.blockComment as boolean }),
     };
 
     const { server, totalTodos } = await createServer(serverOptions);

@@ -60,4 +60,5 @@ export interface ServerOptions {
   format?: OutputFormat;
   log?: boolean;
   logFilter?: string;
+  blockComment?: boolean;
 }

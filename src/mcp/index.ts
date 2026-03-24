@@ -8,7 +8,7 @@ import { registerWatchTools } from './tools/watch.js';
 import { registerListTodos } from './tools/list-todos.js';
 import { registerGetTodoStats } from './tools/get-todo-stats.js';
 import { initDb, syncFileTodos, removeFileTodos } from './db.js';
-import { collectFiles, scanFile } from './scanner.js';
+import { collectFiles, scanFile, type ScanFileOptions } from './scanner.js';
 import type { ServerOptions } from './types.js';
 import { modeConfigs } from './types.js';
 import { createGitignoreFilter, createCustomFilter, combineFilters, type GitignoreFilter } from './gitignore.js';
@@ -21,6 +21,11 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
   const watchPath = resolve(options.watchPath ?? '.');
 
   setFormatter(options.format);
+
+  // Create scan options based on server options
+  const scanOptions: ScanFileOptions | undefined = options.blockComment
+    ? { blockComment: true }
+    : undefined;
 
   const gitignoreFilter: GitignoreFilter | null = options.useGitignore
     ? createGitignoreFilter(watchPath, options.gitignorePath)
@@ -37,15 +42,15 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
     { capabilities: { logging: {} } },
   );
 
-  registerScanFile(server);
+  registerScanFile(server, scanOptions);
   // scan-directory is experimental, only available in labs modes
   if (mode.includes('labs')) {
-    registerScanDirectory(server);
+    registerScanDirectory(server, scanOptions);
   }
   registerListExtensions(server);
 
   if (config.enableWatcher) {
-    registerWatchTools(server, combinedFilter);
+    registerWatchTools(server, combinedFilter, scanOptions);
   }
 
   if (config.enableDatabase) {
@@ -55,7 +60,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
     const files = await collectFiles(watchPath, undefined, combinedFilter);
     let totalTodos = 0;
     for (const file of files) {
-      const todos = await scanFile(file);
+      const todos = await scanFile(file, scanOptions);
       if (todos.length > 0) {
         const relFile = relative(watchPath, file);
         const relTodos = todos.map((t) => ({ ...t, file: relFile }));
@@ -83,7 +88,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
         void (async () => {
           const relPath = relative(watchPath, p);
           try {
-            const todos = await scanFile(p);
+            const todos = await scanFile(p, scanOptions);
             await syncFileTodos(relPath, todos.map((t) => ({ ...t, file: relPath })));
           } catch { /* file may be temporarily unreadable */ }
         })();
@@ -92,7 +97,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
         void (async () => {
           const relPath = relative(watchPath, p);
           try {
-            const todos = await scanFile(p);
+            const todos = await scanFile(p, scanOptions);
             await syncFileTodos(relPath, todos.map((t) => ({ ...t, file: relPath })));
           } catch { /* file may be temporarily unreadable */ }
         })();
