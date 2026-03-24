@@ -58,4 +58,6 @@ export interface ServerOptions {
   gitignorePath?: string;
   filter?: string;
   format?: OutputFormat;
+  log?: boolean;
+  logFilter?: string;
 }
