@@ -54,7 +54,7 @@ describe('MCP Index Module', () => {
 
       const serverInfo = result.server.server['_serverInfo'] as { name: string; version: string };
       expect(serverInfo.name).toBe('context-todos');
-      expect(serverInfo.version).toBe('1.0.0');
+      expect(serverInfo.version).toBe('0.1.0');
     });
 
     it('should not initialize database in standard mode', async () => {

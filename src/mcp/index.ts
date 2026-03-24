@@ -33,7 +33,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
   const combinedFilter = combineFilters(gitignoreFilter, customFilter);
 
   const server = new McpServer(
-    { name: 'context-todos', version: '1.0.0' },
+    { name: 'context-todos', version: '0.1.0' },
     { capabilities: { logging: {} } },
   );
 

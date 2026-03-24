@@ -1,6 +1,6 @@
 {
   "name": "@eeymoo/context-todos",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0",
   "type": "module",
   "description": "MCP server for scanning and managing TODO/FIXME/HACK/XXX comments in your codebase",
   "author": "eeymoo",
@@ -14,11 +14,11 @@
   },
   "homepage": "https://github.com/Eeymoo/context-todos#readme",
   "bin": {
-    "context-todos": "./dist/src/index.js"
+    "context-todos": "./dist/index.js"
   },
-  "main": "./dist/src/index.js",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./dist/src/index.js"
+    ".": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -41,6 +41,7 @@
   ],
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
+    "@anthropic-ai/claude-code": "^2.1.81",
     "@libsql/client": "^0.17.2",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "chokidar": "^5.0.0",
