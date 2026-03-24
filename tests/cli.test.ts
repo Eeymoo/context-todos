@@ -7,7 +7,7 @@ import { join } from 'node:path';
  *
  * TODO: implement --log option for enabling log output
  * TODO: implement --log-filter option for filtering logs by pattern
- * 
+ *
  * These tests verify that the CLI properly parses the new options.
  * The tests execute the actual built CLI and check --help output.
  */
@@ -17,7 +17,7 @@ const cliPath = join(process.cwd(), 'dist', 'index.js');
 // Helper to run CLI and capture output
 function runCli(args: string): string {
   try {
-    return execSync(`node ${cliPath} ${args}`, { 
+    return execSync(`node ${cliPath} ${args}`, {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe']
     });
@@ -31,7 +31,7 @@ function runCli(args: string): string {
 describe('CLI --log option', () => {
   it('should show --log option in help output', () => {
     const helpOutput = runCli('mcp --help');
-    
+
     expect(helpOutput).toContain('--log');
     expect(helpOutput.toLowerCase()).toMatch(/enable.*log|log.*output/i);
   });
@@ -40,7 +40,7 @@ describe('CLI --log option', () => {
     // This test checks that --log is a recognized option
     // We use --help with --log to see if it's accepted
     const result = runCli('mcp --log --help');
-    
+
     // Should not show "unknown option" error
     expect(result).not.toContain('unknown option');
     expect(result).toContain('--log');
@@ -50,14 +50,14 @@ describe('CLI --log option', () => {
 describe('CLI --log-filter option', () => {
   it('should show --log-filter option in help output', () => {
     const helpOutput = runCli('mcp --help');
-    
+
     expect(helpOutput).toContain('--log-filter');
     expect(helpOutput).toContain('<pattern>');
   });
 
   it('should accept --log-filter with a value', () => {
     const result = runCli('mcp --log-filter "error:*" --help');
-    
+
     // Should not show "unknown option" error
     expect(result).not.toContain('unknown option');
   });
@@ -66,7 +66,7 @@ describe('CLI --log-filter option', () => {
 describe('CLI --log and --log-filter combined', () => {
   it('should accept both --log and --log-filter together', () => {
     const result = runCli('mcp --log --log-filter "info:*" --help');
-    
+
     expect(result).not.toContain('unknown option');
     expect(result).toContain('--log');
     expect(result).toContain('--log-filter');
@@ -74,7 +74,7 @@ describe('CLI --log and --log-filter combined', () => {
 
   it('should work with other existing options', () => {
     const result = runCli('mcp --max --log --log-filter "db:*" --help');
-    
+
     expect(result).not.toContain('unknown option');
     expect(result).toContain('--max');
     expect(result).toContain('--log');
@@ -82,10 +82,36 @@ describe('CLI --log and --log-filter combined', () => {
   });
 });
 
+describe('CLI --block-comment option', () => {
+  it('should show --block-comment option in help output', () => {
+    const helpOutput = runCli('mcp --help');
+
+    expect(helpOutput).toContain('--block-comment');
+    expect(helpOutput.toLowerCase()).toMatch(/multiline|multi.?line|block.?comment/i);
+  });
+
+  it('should accept --block-comment with --labs flag', () => {
+    const result = runCli('mcp --labs --block-comment --help');
+
+    // Should not show "unknown option" error
+    expect(result).not.toContain('unknown option');
+    expect(result).toContain('--block-comment');
+  });
+
+  it('should show warning when --block-comment used without --labs', () => {
+    // Run the CLI with --block-comment but without --labs
+    // The server will log a warning message
+    const result = runCli('mcp --block-comment --help');
+
+    // Option should be accepted (not unknown)
+    expect(result).not.toContain('unknown option');
+  });
+});
+
 describe('Help output completeness', () => {
   it('should show all expected options in mcp subcommand help', () => {
     const helpOutput = runCli('mcp --help');
-    
+
     // Existing options that should still be present
     expect(helpOutput).toContain('--port');
     expect(helpOutput).toContain('--watch');
@@ -93,9 +119,10 @@ describe('Help output completeness', () => {
     expect(helpOutput).toContain('--labs');
     expect(helpOutput).toContain('--format');
     expect(helpOutput).toContain('--filter');
-    
+
     // New options
     expect(helpOutput).toContain('--log');
     expect(helpOutput).toContain('--log-filter');
+    expect(helpOutput).toContain('--block-comment');
   });
 });

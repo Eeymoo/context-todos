@@ -1,10 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { resolve, extname } from 'node:path';
-import { isExtensionSupported, scanFile } from '../scanner.js';
+import { isExtensionSupported, scanFile, type ScanFileOptions } from '../scanner.js';
 import { getFormatter } from '../formatter.js';
 
-export function registerScanFile(server: McpServer) {
+export function registerScanFile(server: McpServer, scanOptions?: ScanFileOptions) {
   server.registerTool(
     'scan-file',
     {
@@ -31,7 +31,7 @@ export function registerScanFile(server: McpServer) {
           };
         }
 
-        const todos = await scanFile(absPath);
+        const todos = await scanFile(absPath, scanOptions);
 
         if (todos.length === 0) {
           return {

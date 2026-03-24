@@ -66,6 +66,142 @@ const x = 1;
 
       expect(todos).toEqual([]);
     });
+
+    describe('multiline TODOs', () => {
+      it('should NOT capture continuation lines without blockComment option', async () => {
+        const testFile = join(testDir, 'multiline-disabled.ts');
+        writeFileSync(
+          testFile,
+          `/* TODO(feat): Implement render
+ * - Show checkbox with completion status
+ * - Show content with strikethrough
+ */
+`,
+        );
+
+        // Without blockComment option, should only get first line
+        const todos = await scanFile(testFile);
+
+        expect(todos.length).toBe(1);
+        expect(todos[0].tag).toBe('TODO');
+        expect(todos[0].category).toBe('feat');
+        expect(todos[0].text).toBe('Implement render');
+        expect(todos[0].text).not.toContain('Show checkbox');
+      });
+
+      it('should capture block comment TODO with continuation lines when blockComment enabled', async () => {
+        const testFile = join(testDir, 'multiline.ts');
+        writeFileSync(
+          testFile,
+          `/* TODO(feat): Implement render
+ * - Show checkbox with completion status
+ * - Show content with strikethrough
+ */
+`,
+        );
+
+        const todos = await scanFile(testFile, { blockComment: true });
+
+        expect(todos.length).toBe(1);
+        expect(todos[0].tag).toBe('TODO');
+        expect(todos[0].category).toBe('feat');
+        expect(todos[0].text).toContain('Implement render');
+        expect(todos[0].text).toContain('Show checkbox with completion status');
+        expect(todos[0].text).toContain('Show content with strikethrough');
+      });
+
+      it('should capture line comment TODO with continuation lines when blockComment enabled', async () => {
+        const testFile = join(testDir, 'line-continuation.ts');
+        writeFileSync(
+          testFile,
+          `// TODO(ux): Improve loading state
+// - Add skeleton screen
+// - Show progress percentage
+`,
+        );
+
+        const todos = await scanFile(testFile, { blockComment: true });
+
+        expect(todos.length).toBe(1);
+        expect(todos[0].tag).toBe('TODO');
+        expect(todos[0].category).toBe('ux');
+        expect(todos[0].text).toContain('Improve loading state');
+        expect(todos[0].text).toContain('Add skeleton screen');
+        expect(todos[0].text).toContain('Show progress percentage');
+      });
+
+      it('should capture hash comment TODO with continuation lines when blockComment enabled (Python)', async () => {
+        const testFile = join(testDir, 'multiline.py');
+        writeFileSync(
+          testFile,
+          `# TODO(api): Add authentication
+# - Support JWT tokens
+# - Handle refresh tokens
+`,
+        );
+
+        const todos = await scanFile(testFile, { blockComment: true });
+
+        expect(todos.length).toBe(1);
+        expect(todos[0].tag).toBe('TODO');
+        expect(todos[0].category).toBe('api');
+        expect(todos[0].text).toContain('Add authentication');
+        expect(todos[0].text).toContain('Support JWT tokens');
+        expect(todos[0].text).toContain('Handle refresh tokens');
+      });
+
+      it('should stop at new TODO tag when blockComment enabled', async () => {
+        const testFile = join(testDir, 'multi-todo.ts');
+        writeFileSync(
+          testFile,
+          `// TODO(feat): First todo
+// - Detail 1
+// - Detail 2
+// TODO(feat): Second todo
+// - Detail 3
+`,
+        );
+
+        const todos = await scanFile(testFile, { blockComment: true });
+
+        expect(todos.length).toBe(2);
+        expect(todos[0].text).toContain('First todo');
+        expect(todos[0].text).toContain('Detail 1');
+        expect(todos[0].text).not.toContain('Second todo');
+        expect(todos[1].text).toContain('Second todo');
+        expect(todos[1].text).toContain('Detail 3');
+      });
+
+      it('should stop at block comment end when blockComment enabled', async () => {
+        const testFile = join(testDir, 'block-end.ts');
+        writeFileSync(
+          testFile,
+          `/* TODO(feat): Block todo
+ * - Detail 1
+ */
+// TODO(other): Separate todo
+`,
+        );
+
+        const todos = await scanFile(testFile, { blockComment: true });
+
+        expect(todos.length).toBe(2);
+        expect(todos[0].text).toContain('Block todo');
+        expect(todos[0].text).toContain('Detail 1');
+        expect(todos[0].text).not.toContain('Separate todo');
+        expect(todos[1].text).toContain('Separate todo');
+      });
+
+      it('should handle single line TODO without continuation when blockComment enabled', async () => {
+        const testFile = join(testDir, 'single.ts');
+        writeFileSync(testFile, `// TODO: Single line todo\n`);
+
+        const todos = await scanFile(testFile, { blockComment: true });
+
+        expect(todos.length).toBe(1);
+        expect(todos[0].text).toBe('Single line todo');
+      });
+    });
   });
 
   describe('collectFiles', () => {
