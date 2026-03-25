@@ -18,7 +18,16 @@ const logger = consola;
 program
   .name('context-todos')
   .description('AI context-aware TODO tracker')
-  .version('0.1.0');
+  .version('0.1.0')
+  .option('--labs', 'Enable Labs mode (experimental features)')
+  .option('--max', 'Enable Max mode (watcher + database persistence)')
+  .option('--block-comment', 'Enable multiline TODO parsing (requires --labs)')
+  .option('--use-gitignore', 'Use .gitignore to filter files', true)
+  .option('--gitignore-path <path>', 'Custom path to gitignore file (default: .gitignore)')
+  .option('--filter <patterns>', 'Comma-separated patterns to exclude (e.g., "*.test.ts,*.spec.ts,__tests__/**")')
+  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
+  .option('--log', 'Enable log output')
+  .option('--log-filter <pattern>', 'Filter logs by pattern');
 
 program
   .command('mcp')
@@ -26,28 +35,22 @@ program
   .option('-p, --port <number>', 'Port to run the MCP server on (enables SSE mode)')
   .option('-w, --watch <path>', 'Path to watch for changes', '.')
   .option('--stdio', 'Force stdio mode instead of SSE')
-  .option('--max', 'Enable Max mode (watcher + database persistence)')
-  .option('--labs', 'Enable Labs mode (experimental features)')
-  .option('--block-comment', 'Enable multiline TODO parsing (requires --labs)')
-  .option('--use-gitignore', 'Use .gitignore to filter files', true)
-  .option('--gitignore-path <path>', 'Custom path to gitignore file (default: .gitignore)')
-  .option('--filter <patterns>', 'Comma-separated patterns to exclude (e.g., "*.test.ts,*.spec.ts,__tests__/**")')
-  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
-  .option('--log', 'Enable log output')
-  .option('--log-filter <pattern>', 'Filter logs by pattern')
   .action(async (options) => {
+    // Get global options
+    const globalOpts = program.opts();
+
     // block-comment requires --labs mode
-    if (options.blockComment && !options.labs) {
+    if (globalOpts.blockComment && !globalOpts.labs) {
       logger.warn('--block-comment requires --labs mode, ignoring --block-comment');
-      options.blockComment = false;
+      globalOpts.blockComment = false;
     }
 
     let mode: ServerMode;
-    if (options.labs && options.max) {
+    if (globalOpts.labs && globalOpts.max) {
       mode = 'labs-max';
-    } else if (options.labs) {
+    } else if (globalOpts.labs) {
       mode = 'labs-standard';
-    } else if (options.max) {
+    } else if (globalOpts.max) {
       mode = 'max';
     } else {
       mode = 'standard';
@@ -58,13 +61,13 @@ program
     const serverOptions = {
       mode,
       watchPath: options.watch as string,
-      useGitignore: options.useGitignore as boolean,
-      ...(options.gitignorePath && { gitignorePath: options.gitignorePath as string }),
-      ...(options.filter && { filter: options.filter as string }),
-      format: options.format as string,
-      ...(options.log && { log: options.log as boolean }),
-      ...(options.logFilter && { logFilter: options.logFilter as string }),
-      ...(options.blockComment && { blockComment: options.blockComment as boolean }),
+      useGitignore: globalOpts.useGitignore as boolean,
+      ...(globalOpts.gitignorePath && { gitignorePath: globalOpts.gitignorePath as string }),
+      ...(globalOpts.filter && { filter: globalOpts.filter as string }),
+      format: globalOpts.format as string,
+      ...(globalOpts.log && { log: globalOpts.log as boolean }),
+      ...(globalOpts.logFilter && { logFilter: globalOpts.logFilter as string }),
+      ...(globalOpts.blockComment && { blockComment: globalOpts.blockComment as boolean }),
     };
 
     const { server, totalTodos } = await createServer(serverOptions);
@@ -119,26 +122,24 @@ program
 program
   .command('scan-file <file>')
   .description('Scan a single file for TODO comments')
-  .option('--labs', 'Enable experimental features')
-  .option('--block-comment', 'Enable multiline TODO parsing (requires --labs)')
-  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
-  .option('--log', 'Enable log output')
-  .option('--log-filter <pattern>', 'Filter logs by pattern')
   .action(async (file, options) => {
+    // Get global options
+    const globalOpts = program.opts();
+
     // block-comment requires --labs mode
-    if (options.blockComment && !options.labs) {
+    if (globalOpts.blockComment && !globalOpts.labs) {
       logger.warn('--block-comment requires --labs mode, ignoring --block-comment');
-      options.blockComment = false;
+      globalOpts.blockComment = false;
     }
 
-    if (options.log) {
+    if (globalOpts.log) {
       logger.info(`Scanning file: ${file}`);
     }
 
     try {
       const config: OperationConfig = {};
-      if (options.blockComment) {
-        config.blockComment = options.blockComment;
+      if (globalOpts.blockComment) {
+        config.blockComment = globalOpts.blockComment;
       }
 
       const result = await scanFileOperation({
@@ -153,7 +154,7 @@ program
 
       const { todos, filePath: resolvedPath } = result.data;
 
-      if (options.log) {
+      if (globalOpts.log) {
         logger.info(`Found ${todos.length} TODO(s) in ${file}`);
       }
 
@@ -162,7 +163,7 @@ program
         process.exit(0);
       }
 
-      setFormatter(options.format as OutputFormat);
+      setFormatter(globalOpts.format as OutputFormat);
       const formatter = getFormatter();
       const formatted = formatter.formatTodos(todos);
       console.log(`Found ${todos.length} TODO(s) in ${file}:\n\n${formatted}`);
@@ -176,8 +177,7 @@ program
 program
   .command('list-extensions')
   .description('List supported file extensions')
-  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
-  .action(async (options) => {
+  .action(async () => {
     try {
       const result = await listExtensionsOperation();
 
@@ -188,7 +188,10 @@ program
 
       const { extensions, count } = result.data;
 
-      if (options.format === 'json') {
+      // Get global options
+      const globalOpts = program.opts();
+
+      if (globalOpts.format === 'json') {
         console.log(JSON.stringify(extensions, null, 2));
       } else {
         console.log(`Supported extensions (${count}):\n${extensions.join(', ')}`);
@@ -199,29 +202,34 @@ program
     }
   });
 
-program
-  .command('scan-directory <directory>')
-  .description('Scan a directory recursively for TODO comments')
-  .option('--block-comment', 'Enable multiline TODO parsing')
-  .option('--labs', 'Enable experimental features')
-  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
-  .option('--log', 'Enable log output')
-  .option('--log-filter <pattern>', 'Filter logs by pattern')
-  .option('--extensions <list>', 'Comma-separated list of file extensions to include (e.g., ".ts,.js")')
-  .action(async (directory, options) => {
-    if (options.blockComment && !options.labs) {
+// Check if --labs is in command line arguments
+const hasLabs = process.argv.includes('--labs');
+const hasMax = process.argv.includes('--max');
+
+// Add scan-directory command only if --labs or --max is enabled
+if (hasLabs || hasMax) {
+  program
+    .command('scan-directory <directory>')
+    .description('Scan a directory recursively for TODO comments')
+    .option('--extensions <list>', 'Comma-separated list of file extensions to include (e.g., ".ts,.js")')
+    .action(async (directory, options) => {
+    // Get global options
+    const globalOpts = program.opts();
+
+    // block-comment requires --labs mode
+    if (globalOpts.blockComment && !globalOpts.labs) {
       logger.warn('--block-comment requires --labs mode, ignoring --block-comment');
-      options.blockComment = false;
+      globalOpts.blockComment = false;
     }
 
-    if (options.log) {
+    if (globalOpts.log) {
       logger.info(`Scanning directory: ${directory}`);
     }
 
     try {
       const config: OperationConfig = {};
-      if (options.blockComment) {
-        config.blockComment = options.blockComment;
+      if (globalOpts.blockComment) {
+        config.blockComment = globalOpts.blockComment;
       }
 
       const input: ScanDirectoryInput = {
@@ -242,7 +250,7 @@ program
 
       const { todos, directoryPath, fileCount } = result.data;
 
-      if (options.log) {
+      if (globalOpts.log) {
         logger.info(`Found ${todos.length} TODO(s) in ${directory}`);
       }
 
@@ -251,14 +259,13 @@ program
         process.exit(0);
       }
 
-      setFormatter(options.format as OutputFormat);
+      setFormatter(globalOpts.format as OutputFormat);
       const formatter = getFormatter();
       const formatted = formatter.formatTodos(todos);
       console.log(`Found ${todos.length} TODO(s) across ${fileCount} file(s) in ${directory}:\n\n${formatted}`);
     } catch (error) {
-      console.log(`Error scanning directory: ${error instanceof Error ? error.message : String(error)}`);
-      process.exit(1);
     }
   });
+}
 
 program.parse();
