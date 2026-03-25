@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { resolve, extname } from 'node:path';
-import { isExtensionSupported, scanFile, type ScanFileOptions } from '../scanner.js';
+import { scanFileOperation, type OperationConfig } from '../operations/index.js';
 import { getFormatter } from '../formatter.js';
+import type { ScanFileOptions } from '../scanner.js';
 
 export function registerScanFile(server: McpServer, scanOptions?: ScanFileOptions) {
   server.registerTool(
@@ -17,26 +17,38 @@ export function registerScanFile(server: McpServer, scanOptions?: ScanFileOption
     },
     async ({ path: filePath }) => {
       try {
-        const absPath = resolve(filePath);
-        const ext = extname(absPath);
+        // Convert scanOptions to OperationConfig
+        const config: OperationConfig = {};
+        if (scanOptions?.blockComment !== undefined) {
+          config.blockComment = scanOptions.blockComment;
+        }
 
-        if (!ext || !isExtensionSupported(ext)) {
+        // Call shared operation
+        const result = await scanFileOperation({
+          filePath,
+          config,
+        });
+
+        if (!result.success) {
           return {
             content: [
               {
                 type: 'text' as const,
-                text: `Unsupported file extension: ${ext || '(none)'}`,
+                text: result.error,
               },
             ],
           };
         }
 
-        const todos = await scanFile(absPath, scanOptions);
+        const { todos, filePath: resolvedPath } = result.data;
 
         if (todos.length === 0) {
           return {
             content: [
-              { type: 'text' as const, text: `No TODOs found in ${filePath}` },
+              {
+                type: 'text' as const,
+                text: `No TODOs found in ${resolvedPath}`,
+              },
             ],
           };
         }
@@ -47,7 +59,7 @@ export function registerScanFile(server: McpServer, scanOptions?: ScanFileOption
           content: [
             {
               type: 'text' as const,
-              text: `Found ${todos.length} TODO(s) in ${filePath}:\n\n${formatted}`,
+              text: `Found ${todos.length} TODO(s) in ${resolvedPath}:\n\n${formatted}`,
             },
           ],
         };

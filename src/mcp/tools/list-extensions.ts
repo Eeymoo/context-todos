@@ -1,16 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { isExtensionSupported } from '../scanner.js';
+import { listExtensionsOperation } from '../operations/index.js';
 
-const EXTENSION_CANDIDATES = [
-  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
-  '.py', '.rb', '.java', '.go', '.rs', '.c', '.cpp', '.h', '.hpp',
-  '.cs', '.php', '.swift', '.kt', '.scala', '.sh', '.bash',
-  '.css', '.scss', '.less', '.html', '.vue', '.svelte',
-  '.yaml', '.yml', '.toml', '.ini', '.cfg',
-  '.sql', '.lua', '.r', '.m', '.mm', '.pl', '.pm',
-  '.ex', '.exs', '.erl', '.hs', '.elm', '.clj', '.cljs',
-  '.tf', '.hcl', '.dockerfile',
-];
 
 export function registerListExtensions(server: McpServer) {
   server.registerTool(
@@ -20,12 +10,26 @@ export function registerListExtensions(server: McpServer) {
       description: 'Lists all supported file extensions.',
     },
     async () => {
-      const supported = EXTENSION_CANDIDATES.filter((ext) => isExtensionSupported(ext));
+      const result = await listExtensionsOperation();
+
+      if (!result.success) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: result.error,
+            },
+          ],
+        };
+      }
+
+      const { extensions, count } = result.data;
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: `Supported extensions (${supported.length}):\n${supported.join(', ')}`,
+            text: `Supported extensions (${count}):\n${extensions.join(', ')}`,
           },
         ],
       };

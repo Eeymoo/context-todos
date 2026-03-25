@@ -6,6 +6,10 @@ import { createServer } from './mcp/index.js';
 import { createServer as createNodeHttpServer } from 'node:http';
 import type { ServerMode } from './mcp/types.js';
 import { consola } from 'consola';
+import { scanFileOperation, scanDirectoryOperation, listExtensionsOperation, EXTENSION_CANDIDATES, type OperationConfig } from './mcp/operations/index.js';
+import type { ScanDirectoryInput } from './mcp/operations/index.js';
+import type { TodoItem } from './mcp/types.js';
+import { getFormatter, setFormatter, type OutputFormat } from './mcp/formatter.js';
 
 const program = new Command();
 
@@ -109,6 +113,151 @@ program
     } else {
       const transport = new StdioServerTransport();
       await server.connect(transport);
+    }
+  });
+
+program
+  .command('scan-file <file>')
+  .description('Scan a single file for TODO comments')
+  .option('--labs', 'Enable experimental features')
+  .option('--block-comment', 'Enable multiline TODO parsing (requires --labs)')
+  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
+  .option('--log', 'Enable log output')
+  .option('--log-filter <pattern>', 'Filter logs by pattern')
+  .action(async (file, options) => {
+    // block-comment requires --labs mode
+    if (options.blockComment && !options.labs) {
+      logger.warn('--block-comment requires --labs mode, ignoring --block-comment');
+      options.blockComment = false;
+    }
+
+    if (options.log) {
+      logger.info(`Scanning file: ${file}`);
+    }
+
+    try {
+      const config: OperationConfig = {};
+      if (options.blockComment) {
+        config.blockComment = options.blockComment;
+      }
+
+      const result = await scanFileOperation({
+        filePath: file,
+        config,
+      });
+
+      if (!result.success) {
+        console.log(result.error);
+        process.exit(1);
+      }
+
+      const { todos, filePath: resolvedPath } = result.data;
+
+      if (options.log) {
+        logger.info(`Found ${todos.length} TODO(s) in ${file}`);
+      }
+
+      if (todos.length === 0) {
+        console.log(`No TODOs found in ${file}`);
+        process.exit(0);
+      }
+
+      setFormatter(options.format as OutputFormat);
+      const formatter = getFormatter();
+      const formatted = formatter.formatTodos(todos);
+      console.log(`Found ${todos.length} TODO(s) in ${file}:\n\n${formatted}`);
+    } catch (error) {
+      console.log(`Error scanning file: ${error instanceof Error ? error.message : String(error)}`);
+      process.exit(1);
+    }
+  });
+
+
+program
+  .command('list-extensions')
+  .description('List supported file extensions')
+  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
+  .action(async (options) => {
+    try {
+      const result = await listExtensionsOperation();
+
+      if (!result.success) {
+        console.log(result.error);
+        process.exit(1);
+      }
+
+      const { extensions, count } = result.data;
+
+      if (options.format === 'json') {
+        console.log(JSON.stringify(extensions, null, 2));
+      } else {
+        console.log(`Supported extensions (${count}):\n${extensions.join(', ')}`);
+      }
+    } catch (error) {
+      console.log(`Error listing extensions: ${error instanceof Error ? error.message : String(error)}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('scan-directory <directory>')
+  .description('Scan a directory recursively for TODO comments')
+  .option('--block-comment', 'Enable multiline TODO parsing')
+  .option('--labs', 'Enable experimental features')
+  .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
+  .option('--log', 'Enable log output')
+  .option('--log-filter <pattern>', 'Filter logs by pattern')
+  .option('--extensions <list>', 'Comma-separated list of file extensions to include (e.g., ".ts,.js")')
+  .action(async (directory, options) => {
+    if (options.blockComment && !options.labs) {
+      logger.warn('--block-comment requires --labs mode, ignoring --block-comment');
+      options.blockComment = false;
+    }
+
+    if (options.log) {
+      logger.info(`Scanning directory: ${directory}`);
+    }
+
+    try {
+      const config: OperationConfig = {};
+      if (options.blockComment) {
+        config.blockComment = options.blockComment;
+      }
+
+      const input: ScanDirectoryInput = {
+        directoryPath: directory,
+        config,
+      };
+
+      if (options.extensions) {
+        input.extensions = options.extensions.split(',').map((ext: string) => ext.trim());
+      }
+
+      const result = await scanDirectoryOperation(input);
+
+      if (!result.success) {
+        console.log(result.error);
+        process.exit(1);
+      }
+
+      const { todos, directoryPath, fileCount } = result.data;
+
+      if (options.log) {
+        logger.info(`Found ${todos.length} TODO(s) in ${directory}`);
+      }
+
+      if (todos.length === 0) {
+        console.log(`No TODOs found in ${directory}`);
+        process.exit(0);
+      }
+
+      setFormatter(options.format as OutputFormat);
+      const formatter = getFormatter();
+      const formatted = formatter.formatTodos(todos);
+      console.log(`Found ${todos.length} TODO(s) across ${fileCount} file(s) in ${directory}:\n\n${formatted}`);
+    } catch (error) {
+      console.log(`Error scanning directory: ${error instanceof Error ? error.message : String(error)}`);
+      process.exit(1);
     }
   });
 
