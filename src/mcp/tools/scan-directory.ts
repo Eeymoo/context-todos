@@ -1,10 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { resolve, relative } from 'node:path';
-import { statSync } from 'node:fs';
-import { collectFiles, scanFile, type ScanFileOptions } from '../scanner.js';
-import type { TodoItem } from '../types.js';
+import { scanDirectoryOperation, type OperationConfig, type ScanDirectoryInput } from '../operations/index.js';
 import { getFormatter } from '../formatter.js';
+import type { ScanFileOptions } from '../scanner.js';
 
 export function registerScanDirectory(server: McpServer, scanOptions?: ScanFileOptions) {
   server.registerTool(
@@ -20,51 +18,59 @@ export function registerScanDirectory(server: McpServer, scanOptions?: ScanFileO
           .optional(),
         extensions: z
           .array(z.string())
-          .describe('Filter by file extensions, e.g. [".ts", ".js"]. If omitted, scans all supported extensions.')
+          .describe('Filter by file extensions, e.g. [\".ts\", \".js\"]. If omitted, scans all supported extensions.')
           .optional(),
       }),
     },
     async ({ path: dirPath, extensions }) => {
       try {
-        const absDir = resolve(dirPath ?? '.');
-        const stat = statSync(absDir);
+        // Convert scanOptions to OperationConfig
+        const config: OperationConfig = {};
+        if (scanOptions?.blockComment !== undefined) {
+          config.blockComment = scanOptions.blockComment;
+        }
 
-        if (!stat.isDirectory()) {
+        // Call shared operation
+        const input: any = {
+          directoryPath: dirPath ?? '.',
+          config,
+        };
+        if (extensions !== undefined) {
+          input.extensions = extensions;
+        }
+        const result = await scanDirectoryOperation(input);
+
+        if (!result.success) {
           return {
             content: [
               {
                 type: 'text' as const,
-                text: `Not a directory: ${absDir}`,
+                text: result.error,
               },
             ],
           };
         }
 
-        const files = await collectFiles(absDir, extensions);
-        const allTodos: TodoItem[] = [];
+        const { todos, directoryPath, fileCount } = result.data;
 
-        for (const file of files) {
-          const todos = await scanFile(file, scanOptions);
-          for (const todo of todos) {
-            allTodos.push({ ...todo, file: relative(absDir, file) });
-          }
-        }
-
-        if (allTodos.length === 0) {
+        if (todos.length === 0) {
           return {
             content: [
-              { type: 'text' as const, text: `No TODOs found in ${absDir}` },
+              {
+                type: 'text' as const,
+                text: `No TODOs found in ${directoryPath}`,
+              },
             ],
           };
         }
 
-        const formatted = getFormatter().formatTodos(allTodos);
+        const formatted = getFormatter().formatTodos(todos);
 
         return {
           content: [
             {
               type: 'text' as const,
-              text: `Found ${allTodos.length} TODO(s) across ${files.length} file(s) in ${absDir}:\n\n${formatted}`,
+              text: `Found ${todos.length} TODO(s) across ${fileCount} file(s) in ${directoryPath}:\n\n${formatted}`,
             },
           ],
         };
