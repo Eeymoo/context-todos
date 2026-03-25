@@ -11,6 +11,39 @@ describe('EXTENSION_CANDIDATES constant', () => {
     expect(EXTENSION_CANDIDATES).toContain('.go');
   });
 
+  it('should contain frontend extensions', () => {
+    expect(EXTENSION_CANDIDATES).toContain('.tsx');
+    expect(EXTENSION_CANDIDATES).toContain('.jsx');
+    expect(EXTENSION_CANDIDATES).toContain('.vue');
+    expect(EXTENSION_CANDIDATES).toContain('.svelte');
+    expect(EXTENSION_CANDIDATES).toContain('.css');
+    expect(EXTENSION_CANDIDATES).toContain('.scss');
+    expect(EXTENSION_CANDIDATES).toContain('.less');
+    expect(EXTENSION_CANDIDATES).toContain('.html');
+  });
+
+  it('should contain backend extensions', () => {
+    expect(EXTENSION_CANDIDATES).toContain('.rs');
+    expect(EXTENSION_CANDIDATES).toContain('.c');
+    expect(EXTENSION_CANDIDATES).toContain('.cpp');
+    expect(EXTENSION_CANDIDATES).toContain('.cs');
+    expect(EXTENSION_CANDIDATES).toContain('.php');
+    expect(EXTENSION_CANDIDATES).toContain('.swift');
+    expect(EXTENSION_CANDIDATES).toContain('.kt');
+    expect(EXTENSION_CANDIDATES).toContain('.scala');
+  });
+
+  it('should contain script and config extensions', () => {
+    expect(EXTENSION_CANDIDATES).toContain('.sh');
+    expect(EXTENSION_CANDIDATES).toContain('.bash');
+    expect(EXTENSION_CANDIDATES).toContain('.yaml');
+    expect(EXTENSION_CANDIDATES).toContain('.yml');
+    expect(EXTENSION_CANDIDATES).toContain('.toml');
+    expect(EXTENSION_CANDIDATES).toContain('.ini');
+    expect(EXTENSION_CANDIDATES).toContain('.cfg');
+    expect(EXTENSION_CANDIDATES).toContain('.dockerfile');
+  });
+
   it('should have at least 40 extensions', () => {
     expect(EXTENSION_CANDIDATES.length).toBeGreaterThanOrEqual(40);
   });
@@ -36,6 +69,13 @@ describe('getSupportedExtensions function', () => {
     }
   });
 
+  it('should include specific supported extensions', () => {
+    const supported = getSupportedExtensions();
+    expect(supported).toContain('.ts');
+    expect(supported).toContain('.js');
+    expect(supported).toContain('.py');
+  });
+
   it('should filter out unsupported extensions', () => {
     const supported = getSupportedExtensions();
     const allCandidates = EXTENSION_CANDIDATES;
@@ -44,7 +84,7 @@ describe('getSupportedExtensions function', () => {
   });
 });
 
-// TODO(test): Test getSupportedExtensions filters out unsupported extensions
+// TODO(test): Test isExtensionSupported function behavior
 describe('isExtensionSupported re-export', () => {
   it('should be a function', () => {
     expect(typeof isExtensionSupported).toBe('function');
@@ -54,5 +94,15 @@ describe('isExtensionSupported re-export', () => {
     expect(typeof isExtensionSupported('.ts')).toBe('boolean');
     expect(typeof isExtensionSupported('.js')).toBe('boolean');
     expect(typeof isExtensionSupported('.xyz')).toBe('boolean');
+  });
+
+  it('should return consistent results for same extension', () => {
+    const result1 = isExtensionSupported('.ts');
+    const result2 = isExtensionSupported('.ts');
+    expect(result1).toBe(result2);
+  });
+
+  it('should return false for obviously fake extension', () => {
+    expect(isExtensionSupported('.xyz123notreal')).toBe(false);
   });
 });

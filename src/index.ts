@@ -7,6 +7,7 @@ import { createServer as createNodeHttpServer } from 'node:http';
 import type { ServerMode } from './mcp/types.js';
 import { consola } from 'consola';
 import { scanFileOperation, scanDirectoryOperation, listExtensionsOperation, EXTENSION_CANDIDATES, type OperationConfig } from './mcp/operations/index.js';
+import type { ScanDirectoryInput } from './mcp/operations/index.js';
 import type { TodoItem } from './mcp/types.js';
 import { getFormatter, setFormatter, type OutputFormat } from './mcp/formatter.js';
 
@@ -118,13 +119,16 @@ program
 program
   .command('scan-file <file>')
   .description('Scan a single file for TODO comments')
-  .option('--block-comment', 'Enable multiline TODO parsing')
+  .option('--labs', 'Enable experimental features')
+  .option('--block-comment', 'Enable multiline TODO parsing (requires --labs)')
   .option('--format <format>', 'Output format: toon (default), json, pretty', 'toon')
   .option('--log', 'Enable log output')
   .option('--log-filter <pattern>', 'Filter logs by pattern')
   .action(async (file, options) => {
-    if (options.blockComment) {
-      logger.warn('--block-comment is an experimental feature');
+    // block-comment requires --labs mode
+    if (options.blockComment && !options.labs) {
+      logger.warn('--block-comment requires --labs mode, ignoring --block-comment');
+      options.blockComment = false;
     }
 
     if (options.log) {
@@ -220,7 +224,7 @@ program
         config.blockComment = options.blockComment;
       }
 
-      const input: any = {
+      const input: ScanDirectoryInput = {
         directoryPath: directory,
         config,
       };

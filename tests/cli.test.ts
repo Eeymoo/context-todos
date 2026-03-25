@@ -126,3 +126,53 @@ describe('Help output completeness', () => {
     expect(helpOutput).toContain('--block-comment');
   });
 });
+
+describe('CLI scan-file --block-comment option', () => {
+  it('should show --block-comment option in scan-file help output', () => {
+    const helpOutput = runCli('scan-file --help');
+
+    expect(helpOutput).toContain('--block-comment');
+    expect(helpOutput).toContain('--labs');
+  });
+
+  it('should accept --block-comment with --labs flag for scan-file', () => {
+    const result = runCli('scan-file --labs --block-comment --help');
+
+    // Should not show "unknown option" error
+    expect(result).not.toContain('unknown option');
+    expect(result).toContain('--block-comment');
+  });
+
+  it('should show warning when --block-comment used without --labs in scan-file', () => {
+    // Run the CLI with --block-comment but without --labs
+    const result = runCli('scan-file --block-comment --help');
+
+    // Option should be accepted (not unknown)
+    expect(result).not.toContain('unknown option');
+  });
+});
+
+describe('CLI scan-directory --block-comment option', () => {
+  it('should show --block-comment option in scan-directory help output', () => {
+    const helpOutput = runCli('scan-directory --help');
+
+    expect(helpOutput).toContain('--block-comment');
+    expect(helpOutput).toContain('--labs');
+  });
+
+  it('should accept --block-comment with --labs flag for scan-directory', () => {
+    const result = runCli('scan-directory --labs --block-comment --help');
+
+    // Should not show "unknown option" error
+    expect(result).not.toContain('unknown option');
+    expect(result).toContain('--block-comment');
+  });
+
+  it('should show warning when --block-comment used without --labs in scan-directory', () => {
+    // Run the CLI with --block-comment but without --labs
+    const result = runCli('scan-directory --block-comment --help');
+
+    // Option should be accepted (not unknown)
+    expect(result).not.toContain('unknown option');
+  });
+});
