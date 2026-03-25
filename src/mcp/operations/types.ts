@@ -7,6 +7,8 @@
 
 import type { TodoItem } from '../types.js';
 import type { OutputFormat } from '../formatter.js';
+import type { GitignoreFilter } from '../gitignore.js';
+import type { ScanFileOptions } from '../scanner.js';
 
 /**
  * Generic operation result type that represents either a successful result
@@ -40,6 +42,16 @@ export interface ScanFileResult {
 }
 
 /**
+ * Input parameters for scan-file operation.
+ */
+export interface ScanFileInput {
+  /** File path to scan (absolute or relative) */
+  filePath: string;
+  /** Configuration options */
+  config: OperationConfig;
+}
+
+/**
  * Result data for scan directory operation.
  */
 export interface ScanDirectoryResult {
@@ -49,6 +61,18 @@ export interface ScanDirectoryResult {
   directoryPath: string;
   /** Number of files that were scanned */
   fileCount: number;
+}
+
+/**
+ * Input parameters for scan-directory operation.
+ */
+export interface ScanDirectoryInput {
+  /** Directory path to scan (absolute or relative) */
+  directoryPath: string;
+  /** Filter by file extensions (e.g., ['.ts', '.js']) */
+  extensions?: string[];
+  /** Configuration options */
+  config: OperationConfig;
 }
 
 /**
@@ -62,23 +86,69 @@ export interface ListExtensionsResult {
 }
 
 /**
- * Input parameters for scan-file operation.
+ * Input parameters for list-todos operation.
  */
-export interface ScanFileInput {
-  /** File path to scan (absolute or relative) */
-  filePath: string;
+export interface ListTodosInput {
+  /** Filter by tag (TODO, FIXME, HACK, XXX) */
+  tag?: string;
+  /** Filter by file path (partial match) */
+  file?: string;
+  /** Filter by category */
+  category?: string;
+  /** Maximum number of results (default: 100) */
+  limit?: number;
+  /** Offset for pagination (default: 0) */
+  offset?: number;
   /** Configuration options */
   config: OperationConfig;
 }
 
 /**
- * Input parameters for scan-directory operation.
+ * Result data for list-todos operation.
  */
-export interface ScanDirectoryInput {
-  /** Directory path to scan (absolute or relative) */
-  directoryPath: string;
-  /** Optional array of file extensions to filter by */
+export interface ListTodosResult {
+  /** Array of TODO items found */
+  todos: TodoItem[];
+  /** Total number of TODOs matching query */
+  total: number;
+  /** Number of TODOs returned in this response */
+  count: number;
+}
+
+/**
+ * Result data for get-todo-stats operation.
+ */
+export interface GetTodoStatsResult {
+  /** Total count of all TODOs */
+  total: number;
+  /** Breakdown by tag */
+  byTag: Array<{ tag: string; count: number }>;
+  /** Breakdown by file */
+  byFile: Array<{ file: string; count: number }>;
+  /** Breakdown by category */
+  byCategory: Array<{ category: string; count: number }>;
+}
+
+/**
+ * Input parameters for watch-start operation.
+ */
+export interface WatchStartInput {
+  /** Path to watch (default: current directory) */
+  path?: string;
+  /** Filter by file extensions */
   extensions?: string[];
-  /** Configuration options */
-  config: OperationConfig;
+  /** Gitignore filter (optional) */
+  gitignoreFilter?: GitignoreFilter;
+  /** Scan options */
+  scanOptions?: ScanFileOptions;
+}
+
+/**
+ * Result data for watch-start operation.
+ */
+export interface WatchStartResult {
+  /** Whether watcher is active */
+  watching: boolean;
+  /** Path being watched */
+  path: string;
 }

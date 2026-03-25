@@ -346,7 +346,7 @@ describe('list-todos tool', () => {
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
       expect(content![0]!.type).toBe('text');
-      expect(content![0]!.text).toContain('Error querying TODOs');
+      expect(content![0]!.text).toContain('Error listing todos');
     });
   });
 });

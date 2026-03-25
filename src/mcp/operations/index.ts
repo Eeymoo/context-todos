@@ -11,8 +11,13 @@ export type {
   ScanFileResult,
   ScanDirectoryResult,
   ListExtensionsResult,
+  ListTodosResult,
+  GetTodoStatsResult,
+  WatchStartResult,
   ScanFileInput,
   ScanDirectoryInput,
+  ListTodosInput,
+  WatchStartInput,
 } from './types.js';
 
 export {
@@ -26,3 +31,9 @@ export { scanFileOperation } from './scan-file.js';
 export { scanDirectoryOperation } from './scan-directory.js';
 
 export { listExtensionsOperation } from './list-extensions.js';
+
+export { listTodosOperation } from './list-todos.js';
+
+export { getTodoStatsOperation } from './get-todo-stats.js';
+
+export { watchStartOperation } from './watch.js';

@@ -1,8 +1,24 @@
+/**
+ * List todos MCP tool.
+ *
+ * Provides the MCP tool interface for querying persisted TODOs from database.
+ * Uses shared listTodosOperation for core logic.
+ */
+
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { queryTodos } from '../db.js';
+import { listTodosOperation } from '../operations/list-todos.js';
 import { getFormatter } from '../formatter.js';
 
+/**
+ * Register the list-todos MCP tool.
+ *
+ * @param server - The MCP server instance to register the tool with
+ *
+ * @example
+ * const server = new McpServer({ name: 'todos', version: '1.0.0' });
+ * registerListTodos(server);
+ */
 export function registerListTodos(server: McpServer) {
   server.registerTool(
     'list-todos',
@@ -18,42 +34,42 @@ export function registerListTodos(server: McpServer) {
       }),
     },
     async (params) => {
-      try {
-        const query: Parameters<typeof queryTodos>[0] = {};
-        if (params.tag !== undefined) query.tag = params.tag;
-        if (params.file !== undefined) query.file = params.file;
-        if (params.category !== undefined) query.category = params.category;
-        if (params.limit !== undefined) query.limit = params.limit;
-        if (params.offset !== undefined) query.offset = params.offset;
+      // Build input object with only defined values
+      const input: Parameters<typeof listTodosOperation>[0] = {
+        config: {},
+      };
+      if (params.tag !== undefined) input.tag = params.tag;
+      if (params.file !== undefined) input.file = params.file;
+      if (params.category !== undefined) input.category = params.category;
+      if (params.limit !== undefined) input.limit = params.limit;
+      if (params.offset !== undefined) input.offset = params.offset;
 
-        const { todos, total } = await queryTodos(query);
+      const result = await listTodosOperation(input);
 
-        if (todos.length === 0) {
-          return {
-            content: [{ type: 'text' as const, text: 'No TODOs found in database.' }],
-          };
-        }
-
-        const formatted = getFormatter().formatTodos(todos);
-
+      if (!result.success) {
         return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `Showing ${todos.length} of ${total} TODO(s):\n\n${formatted}`,
-            },
-          ],
-        };
-      } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `Error querying TODOs: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
+          content: [{ type: 'text' as const, text: result.error }],
         };
       }
+
+      const { todos, total, count } = result.data;
+
+      if (count === 0) {
+        return {
+          content: [{ type: 'text' as const, text: 'No TODOs found in database.' }],
+        };
+      }
+
+      const formatted = getFormatter().formatTodos(todos);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: `Showing ${count} of ${total} TODO(s):\n\n${formatted}`,
+          },
+        ],
+      };
     },
   );
 }
