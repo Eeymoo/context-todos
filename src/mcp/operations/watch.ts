@@ -14,13 +14,15 @@ import type { WatchStartInput, WatchStartResult, OperationResult } from './types
  *
  * This function handles the core logic of:
  * 1. Resolving the watch path
- * 2. Creating and starting the watcher
- * 3. Returning a standardized operation result
+ * 2. Using provided watcher or creating a new one
+ * 3. Starting the watcher
+ * 4. Returning a standardized operation result
  *
- * @param input - Watch start input parameters including path and extensions
- * @returns OperationResult<WatchStartResult> with watch status or error message
+ * @param input - Watch start input parameters including path, extensions, and optional watcher
+ * @returns OperationResult<WatchStartResult> with watch status, path, and watcher instance
  *
  * @example
+ * // CLI usage (creates new watcher)
  * const result = await watchStartOperation({
  *   path: './src',
  *   extensions: ['.ts', '.js'],
@@ -29,21 +31,38 @@ import type { WatchStartInput, WatchStartResult, OperationResult } from './types
  * if (result.success) {
  *   console.log(`Watching: ${result.data.path}`);
  * }
+ *
+ * @example
+ * // MCP usage (with existing watcher)
+ * const watcher = createWatcher({ gitignoreFilter });
+ * const result = await watchStartOperation({
+ *   path: './src',
+ *   extensions: ['.ts', '.js'],
+ *   gitignoreFilter,
+ *   watcher,
+ * });
+ *
+ * if (result.success) {
+ *   // MCP tool can use result.data.watcher for subsequent calls
+ *   console.log(`Watching: ${result.data.path}`);
+ * }
  */
 export async function watchStartOperation(
   input: WatchStartInput
 ): Promise<OperationResult<WatchStartResult>> {
   try {
-    const { path, extensions, gitignoreFilter, scanOptions } = input;
+    const { path, extensions, gitignoreFilter, scanOptions, watcher: providedWatcher } = input;
     const watchPath = path ?? '.';
 
-    const watcherOptions = gitignoreFilter
-      ? { gitignoreFilter, ...(scanOptions && { scanOptions }) }
-      : scanOptions
-        ? { scanOptions }
-        : undefined;
+    // Use provided watcher or create a new one
+    const watcher = providedWatcher ?? createWatcher(
+      gitignoreFilter
+        ? { gitignoreFilter, ...(scanOptions && { scanOptions }) }
+        : scanOptions
+          ? { scanOptions }
+          : undefined
+    );
 
-    const watcher = createWatcher(watcherOptions);
     await watcher.start(watchPath, extensions);
 
     return {
@@ -51,6 +70,7 @@ export async function watchStartOperation(
       data: {
         watching: true,
         path: resolve(watchPath),
+        watcher,
       },
     };
   } catch (err) {

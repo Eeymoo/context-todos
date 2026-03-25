@@ -1,14 +1,34 @@
+/**
+ * Watch MCP tools.
+ *
+ * Provides MCP tool interfaces for file watching operations.
+ * Uses shared watchStartOperation for start-watching tool.
+ */
+
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { createWatcher } from '../watcher.js';
+import { watchStartOperation } from '../operations/watch.js';
 import type { GitignoreFilter } from '../gitignore.js';
 import type { ScanFileOptions } from '../scanner.js';
 
+/**
+ * Register watch-related MCP tools.
+ *
+ * @param server - The MCP server instance to register tools with
+ * @param gitignoreFilter - Optional gitignore filter for file exclusion
+ * @param scanOptions - Optional scan options for TODO parsing
+ *
+ * @example
+ * const server = new McpServer({ name: 'todos', version: '1.0.0' });
+ * registerWatchTools(server, gitignoreFilter, { blockComment: true });
+ */
 export function registerWatchTools(
   server: McpServer,
   gitignoreFilter?: GitignoreFilter,
   scanOptions?: ScanFileOptions
 ) {
+  // Create shared watcher instance for all watch tools
   const watcherOptions = gitignoreFilter
     ? { gitignoreFilter, ...(scanOptions && { scanOptions }) }
     : scanOptions
@@ -33,26 +53,36 @@ export function registerWatchTools(
       }),
     },
     async ({ path, extensions }) => {
-      try {
-        await watcher.start(path ?? '.', extensions);
+      // Build input for watchStartOperation
+      const input: Parameters<typeof watchStartOperation>[0] = {
+        path: path ?? '.',
+        ...(extensions && { extensions }),
+        ...(gitignoreFilter && { gitignoreFilter }),
+        ...(scanOptions && { scanOptions }),
+        watcher,
+      };
+
+      const result = await watchStartOperation(input);
+
+      if (!result.success) {
         return {
           content: [
             {
               type: 'text' as const,
-              text: `Started watching: ${path ?? '.'}`,
-            },
-          ],
-        };
-      } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `Error starting watcher: ${err instanceof Error ? err.message : String(err)}`,
+              text: result.error,
             },
           ],
         };
       }
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: `Started watching: ${result.data.path}`,
+          },
+        ],
+      };
     },
   );
 

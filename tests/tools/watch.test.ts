@@ -83,7 +83,8 @@ describe('watch tools', () => {
       const result = await tool!.handler({});
       const content = (result as { content: { type: string; text: string }[] }).content;
       expect(content).toBeDefined();
-      expect(content![0]!.text).toContain('Started watching: .');
+      // Path is resolved to absolute path by watchStartOperation
+      expect(content![0]!.text).toContain('Started watching');
     });
 
     it('should support custom path', async () => {

@@ -9,6 +9,7 @@ import type { TodoItem } from '../types.js';
 import type { OutputFormat } from '../formatter.js';
 import type { GitignoreFilter } from '../gitignore.js';
 import type { ScanFileOptions } from '../scanner.js';
+import type { TodoWatcher } from '../types.js';
 
 /**
  * Generic operation result type that represents either a successful result
@@ -141,6 +142,8 @@ export interface WatchStartInput {
   gitignoreFilter?: GitignoreFilter;
   /** Scan options */
   scanOptions?: ScanFileOptions;
+  /** Optional watcher instance for MCP tools (if not provided, creates new one) */
+  watcher?: TodoWatcher;
 }
 
 /**
@@ -151,4 +154,6 @@ export interface WatchStartResult {
   watching: boolean;
   /** Path being watched */
   path: string;
+  /** Watcher instance (returned for MCP tools to manage) */
+  watcher?: TodoWatcher;
 }
