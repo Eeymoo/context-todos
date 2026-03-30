@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import {
   initDb,
   getDb,
+  getDbPath,
   syncFileTodos,
   removeFileTodos,
   queryTodos,
@@ -32,7 +33,7 @@ describe('Database Module', () => {
       const client = await initDb(testDir);
       expect(client).toBeDefined();
 
-      const dbPath = join(testDir, '.context-todos.db');
+      const dbPath = getDbPath(testDir);
       expect(existsSync(dbPath)).toBe(true);
     });
 

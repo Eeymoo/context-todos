@@ -3,7 +3,7 @@ import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createServer } from '../../src/mcp/index.js';
-import { getDb } from '../../src/mcp/db.js';
+import { getDb, getDbPath } from '../../src/mcp/db.js';
 
 describe('MCP Index Module', () => {
   let testDir: string;
@@ -63,7 +63,7 @@ describe('MCP Index Module', () => {
 
       await createServer({ mode: 'standard' });
 
-      const dbFile = join(tempStandardDir, '.context-todos.db');
+      const dbFile = getDbPath(tempStandardDir);
       expect(existsSync(dbFile)).toBe(false);
 
       rmSync(tempStandardDir, { recursive: true, force: true });
@@ -82,7 +82,7 @@ describe('MCP Index Module', () => {
     it('should initialize database at watchPath', async () => {
       await createServer({ mode: 'max', watchPath: testDir });
 
-      const dbFile = join(testDir, '.context-todos.db');
+      const dbFile = getDbPath(testDir);
       expect(existsSync(dbFile)).toBe(true);
     });
 
@@ -119,7 +119,7 @@ const y = 2;
       const result = await createServer({ mode: 'max', watchPath: customDir });
 
       expect(result.totalTodos).toBe(1);
-      const dbFile = join(customDir, '.context-todos.db');
+      const dbFile = getDbPath(customDir);
       expect(existsSync(dbFile)).toBe(true);
     });
 
@@ -200,7 +200,7 @@ const y = 2;
     it('should initialize database in labs mode', async () => {
       await createServer({       mode: 'labs-max', watchPath: testDir });
 
-      const dbFile = join(testDir, '.context-todos.db');
+      const dbFile = getDbPath(testDir);
       expect(existsSync(dbFile)).toBe(true);
     });
   });
@@ -422,8 +422,8 @@ const y = 2;
       const result2 = await createServer({ mode: 'max', watchPath: dir2 });
       expect(result2.totalTodos).toBe(1);
 
-      expect(existsSync(join(dir1, '.context-todos.db'))).toBe(true);
-      expect(existsSync(join(dir2, '.context-todos.db'))).toBe(true);
+      expect(existsSync(getDbPath(dir1))).toBe(true);
+      expect(existsSync(getDbPath(dir2))).toBe(true);
     });
   });
 });

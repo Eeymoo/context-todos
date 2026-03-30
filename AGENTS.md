@@ -1,12 +1,12 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## Project Overview
 
 Context-Todos is an MCP (Model Context Protocol) server that scans and manages TODO/FIXME/HACK/XXX comments in codebases. It provides tools for scanning files/directories, watching for changes, and storing TODOs in a database.
 
-## Claude Code行为准则
+## Codex行为准则
 
 1. **禁止直接向用户提问**：不得直接向用户提问，必须使用提问工具（AskUserQuestion）来收集用户偏好、澄清模糊指令或获取实施决策。
 2. **完成确认**：一旦确认任务完成，必须使用提问工具让用户确认。用户如果对结果不满意，可以提出反馈意见，然后你可以根据反馈进行改进并再次尝试，之后必须再次使用提问工具让用户确认。

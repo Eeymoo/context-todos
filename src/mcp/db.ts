@@ -1,13 +1,55 @@
 import { createClient, type Client } from '@libsql/client';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { mkdirSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
 import type { TodoItem } from './types.js';
 
-const DB_FILE = '.context-todos.db';
+const DB_FILE = 'context-todos.db';
+
+const ROOT_DIR = join(tmpdir(), 'context-todos');
+
+function ensureDir(path: string) {
+  if (!existsSync(path)) {
+    mkdirSync(path, { recursive: true });
+  }
+}
+
+function getProjectHash(basePath: string): string {
+  const resolvedPath = resolve(basePath);
+  return createHash('sha256').update(resolvedPath).digest('hex');
+}
+
+function getDbDir(basePath: string): string {
+  ensureDir(ROOT_DIR);
+  const projectDir = join(ROOT_DIR, getProjectHash(basePath));
+  ensureDir(projectDir);
+  return projectDir;
+}
+
+export function getDbPath(basePath: string = '.'): string {
+  return join(getDbDir(basePath), DB_FILE);
+}
 
 let client: Client | null = null;
 
+/**
+ * Initialize the database connection and create tables if they don't exist.
+ * The database is stored under the hashed `/tmp/context-todos/<hash>` directory for each watch path.
+ *
+ * @param {string} [basePath] - Path used to derive the hashed storage directory (usually the watch path).
+ * @returns {Promise<Client>} The database client instance
+ *
+ * @example
+ * // Initialize database
+ * await initDb();
+ *
+ * @example
+ * // Legacy usage still works when basePath is provided
+ * await initDb('.');
+ */
 export async function initDb(basePath: string = '.'): Promise<Client> {
-  const dbPath = resolve(basePath, DB_FILE);
+  const dbPath = getDbPath(basePath);
   client = createClient({ url: `file:${dbPath}` });
 
   await client.batch(
