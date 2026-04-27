@@ -2,11 +2,18 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { createServer } from '../../src/mcp/index.js';
+import { createServer as createMcpServer } from '../../src/mcp/index.js';
 import { getDb, getDbPath } from '../../src/mcp/db.js';
 
 describe('MCP Index Module', () => {
   let testDir: string;
+  const serverResults: Awaited<ReturnType<typeof createMcpServer>>[] = [];
+
+  async function createServer(...args: Parameters<typeof createMcpServer>) {
+    const result = await createMcpServer(...args);
+    serverResults.push(result);
+    return result;
+  }
 
   beforeEach(() => {
     testDir = join(tmpdir(), `mcp-index-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -14,6 +21,9 @@ describe('MCP Index Module', () => {
   });
 
   afterEach(async () => {
+    await Promise.all(serverResults.map((result) => result.close()));
+    serverResults.length = 0;
+
     try {
       const db = getDb();
       await db.close();
@@ -54,7 +64,7 @@ describe('MCP Index Module', () => {
 
       const serverInfo = result.server.server['_serverInfo'] as { name: string; version: string };
       expect(serverInfo.name).toBe('context-todos');
-      expect(serverInfo.version).toBe('0.1.0');
+      expect(serverInfo.version).toBe('0.2.0-alpha.2');
     });
 
     it('should not initialize database in standard mode', async () => {

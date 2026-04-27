@@ -18,7 +18,7 @@ const logger = consola;
 program
   .name('context-todos')
   .description('AI context-aware TODO tracker')
-  .version('0.1.0');
+  .version('0.2.0-alpha.2');
 
 program
   .command('mcp')

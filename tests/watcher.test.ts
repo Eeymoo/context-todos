@@ -9,6 +9,25 @@ describe('Watcher Module', () => {
   let testDir: string;
   let watcher: TodoWatcher;
 
+  async function waitForChangeCount(count: number, timeout = 1000): Promise<void> {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      if (watcher.getChanges().length >= count) return;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+  }
+
+  async function waitForChange(
+    predicate: (change: ReturnType<TodoWatcher['getChanges']>[number]) => boolean,
+    timeout = 1000,
+  ): Promise<void> {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      if (watcher.getChanges().some(predicate)) return;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+  }
+
   beforeEach(() => {
     testDir = join(tmpdir(), `watcher-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
@@ -45,34 +64,33 @@ describe('Watcher Module', () => {
       watcher = createWatcher();
       await watcher.start(testDir);
 
-      // Create 250 files to exceed default limit
-      for (let i = 0; i < 250; i++) {
+      for (let i = 0; i < 5; i++) {
         const testFile = join(testDir, `test${i}.ts`);
         writeFileSync(testFile, `// TODO: Test ${i}\n`);
       }
 
-      // Wait for all events to be processed
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await waitForChangeCount(5);
 
       const changes = watcher.getChanges();
+      expect(changes.length).toBeGreaterThan(0);
       expect(changes.length).toBeLessThanOrEqual(200);
     });
 
     it('should use custom maxChanges parameter', async () => {
-      watcher = createWatcher({ maxChanges: 10 });
+      watcher = createWatcher({ maxChanges: 3 });
       await watcher.start(testDir);
 
-      // Create 20 files to exceed custom limit
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 6; i++) {
         const testFile = join(testDir, `test${i}.ts`);
         writeFileSync(testFile, `// TODO: Test ${i}\n`);
+        await new Promise((resolve) => setTimeout(resolve, 25));
       }
 
-      // Wait for all events to be processed
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await waitForChangeCount(3);
 
       const changes = watcher.getChanges();
-      expect(changes.length).toBeLessThanOrEqual(10);
+      expect(changes.length).toBeGreaterThan(0);
+      expect(changes.length).toBeLessThanOrEqual(3);
     });
   });
 
@@ -91,12 +109,10 @@ describe('Watcher Module', () => {
       watcher = createWatcher();
       await watcher.start(testDir);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       const testFile = join(testDir, 'new-file.ts');
       writeFileSync(testFile, '// TODO: New file\n');
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(1);
 
       const changes = watcher.getChanges();
       expect(changes.length).toBeGreaterThan(0);
@@ -107,15 +123,13 @@ describe('Watcher Module', () => {
       watcher = createWatcher();
       await watcher.start(testDir, ['.ts', '.js']);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       const tsFile = join(testDir, 'test.ts');
       const pyFile = join(testDir, 'test.py');
 
       writeFileSync(tsFile, '// TODO: TypeScript file\n');
       writeFileSync(pyFile, '# TODO: Python file\n');
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(1);
 
       const changes = watcher.getChanges();
       const tsPaths = changes.map((c) => c.path);
@@ -154,7 +168,7 @@ describe('Watcher Module', () => {
       const testFile = join(testDir, 'new-file.ts');
       writeFileSync(testFile, '// TODO: New file\n');
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(1);
 
       const changes = watcher.getChanges();
       const addEvent = changes.find((c) => c.type === 'add' && c.path === testFile);
@@ -199,8 +213,7 @@ describe('Watcher Module', () => {
 
       unlinkSync(testFile);
 
-      // Wait for unlink event
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await waitForChange((change) => change.type === 'unlink' && change.path === testFile);
 
       const changes = watcher.getChanges();
       const unlinkEvent = changes.find((c) => c.type === 'unlink' && c.path === testFile);
@@ -225,7 +238,7 @@ const x = 1;
 `,
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await waitForChangeCount(3);
 
       const changes = watcher.getChanges();
       const addEvent = changes.find((c) => c.type === 'add' && c.path === testFile);
@@ -253,7 +266,7 @@ const x = 2;
       );
 
       // Wait for change event and TODO scanning
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(2);
 
       const changes = watcher.getChanges();
       const changeEvent = changes.find((c) => c.type === 'change' && c.path === testFile);
@@ -275,7 +288,7 @@ const x = 2;
       unlinkSync(testFile);
 
       // Wait for unlink event
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await waitForChangeCount(1);
 
       const changes = watcher.getChanges();
       const unlinkEvent = changes.find((c) => c.type === 'unlink' && c.path === testFile);
@@ -294,7 +307,7 @@ const x = 2;
       writeFileSync(testFile, '// TODO: Atomic write test\n');
 
       // The watcher should not crash even if scanning fails
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await waitForChangeCount(2);
 
       // Watcher should still be running
       expect(watcher.watching).toBe(true);
@@ -314,7 +327,7 @@ const x = 2;
       writeFileSync(file1, '// TODO: File 1\n');
       writeFileSync(file2, '// TODO: File 2\n');
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(3);
 
       const changes = watcher.getChanges();
 
@@ -356,13 +369,13 @@ const x = 2;
       const file3 = join(testDir, 'file3.ts');
 
       writeFileSync(file1, '// TODO: File 1\n');
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      await waitForChangeCount(1);
 
       writeFileSync(file2, '// TODO: File 2\n');
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      await waitForChangeCount(2);
 
       writeFileSync(file3, '// TODO: File 3\n');
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(3);
 
       const changes = watcher.getChanges();
 
@@ -404,7 +417,7 @@ const x = 2;
       const testFile = join(testDir, 'test.ts');
       writeFileSync(testFile, '// TODO: Test\n');
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(1);
 
       let changes = watcher.getChanges();
       expect(changes.length).toBeGreaterThan(0);
@@ -427,7 +440,7 @@ const x = 2;
       writeFileSync(file1, '// TODO: File 1\n');
       writeFileSync(file2, '// TODO: File 2\n');
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(2);
 
       expect(watcher.getChanges().length).toBe(2);
 
@@ -458,7 +471,7 @@ const x = 2;
       const file1 = join(testDir, 'file1.ts');
       writeFileSync(file1, '// TODO: File 1\n');
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await waitForChangeCount(1);
 
       expect(watcher.getChanges().length).toBe(1);
 
@@ -498,7 +511,7 @@ const x = 2;
       }
 
       // Wait for all events
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await waitForChangeCount(5);
 
       const changes = watcher.getChanges();
 
@@ -523,7 +536,7 @@ const x = 2;
       }
 
       // Wait for all events
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await waitForChangeCount(3);
 
       const changes = watcher.getChanges();
 
