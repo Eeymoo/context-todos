@@ -38,7 +38,7 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
   const combinedFilter = combineFilters(gitignoreFilter, customFilter);
 
   const server = new McpServer(
-    { name: 'context-todos', version: '0.1.0' },
+    { name: 'context-todos', version: '0.2.0-alpha.2' },
     { capabilities: { logging: {} } },
   );
 
@@ -81,9 +81,14 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
       },
       persistent: true,
       ignoreInitial: true,
+      usePolling: true,
+      interval: 100,
     });
 
     dbWatcher
+      .on('error', () => {
+        /* ignore watcher errors so they do not escape as unhandled rejections */
+      })
       .on('add', (p: string) => {
         void (async () => {
           const relPath = relative(watchPath, p);
@@ -110,8 +115,12 @@ export async function createServer(options: ServerOptions = { mode: 'standard' }
       registerGetTodoStats(server);
     }
 
-    return { server, totalTodos };
+    const close = async () => {
+      await dbWatcher.close();
+    };
+
+    return { server, totalTodos, close };
   }
 
-  return { server, totalTodos: 0 };
+  return { server, totalTodos: 0, close: async () => {} };
 }

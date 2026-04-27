@@ -29,19 +29,6 @@ export function createWatcher(options?: {
 
     const absPath = resolve(path);
 
-    fsWatcher = watch(absPath, {
-      ignored: (filePath: string, stats?: { isFile(): boolean }) => {
-        if (gitignoreFilter.ignores(relative(absPath, filePath))) return true;
-        if (stats?.isFile() && extensions) {
-          const ext = extname(filePath);
-          return !extensions.includes(ext);
-        }
-        return false;
-      },
-      persistent: true,
-      ignoreInitial: true,
-    });
-
     const handleFile = async (type: 'add' | 'change' | 'unlink', filePath: string) => {
       let todos: TodoItem[] = [];
       if (type !== 'unlink') {
@@ -54,7 +41,44 @@ export function createWatcher(options?: {
       pushChange({ type, path: filePath, todos, timestamp: Date.now() });
     };
 
-    fsWatcher
+    await new Promise<void>((resolveReady, rejectReady) => {
+      let isReady = false;
+
+      fsWatcher = watch(absPath, {
+        ignored: (filePath: string, stats?: { isFile(): boolean }) => {
+          if (gitignoreFilter.ignores(relative(absPath, filePath))) return true;
+          if (stats?.isFile() && extensions) {
+            const ext = extname(filePath);
+            return !extensions.includes(ext);
+          }
+          return false;
+        },
+        persistent: true,
+        ignoreInitial: true,
+        usePolling: true,
+        interval: 100,
+      });
+
+      fsWatcher
+        .once('ready', () => {
+          isReady = true;
+          resolveReady();
+        })
+        .on('error', (error) => {
+          if (!isReady) {
+            void fsWatcher?.close();
+            fsWatcher = null;
+            rejectReady(error);
+          }
+        });
+    });
+
+    const activeWatcher = fsWatcher;
+    if (!activeWatcher) {
+      throw new Error('Failed to start file watcher.');
+    }
+
+    activeWatcher
       .on('add', (p: string) => handleFile('add', p))
       .on('change', (p: string) => handleFile('change', p))
       .on('unlink', (p: string) => handleFile('unlink', p));

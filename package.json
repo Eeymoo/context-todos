@@ -1,6 +1,6 @@
 {
   "name": "@eeymoo/context-todos",
-  "version": "0.2.0-alpha.0",
+  "version": "0.2.0-alpha.2",
   "type": "module",
   "description": "MCP server for scanning and managing TODO/FIXME/HACK/XXX comments in your codebase",
   "author": "eeymoo",
@@ -23,10 +23,10 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts mcp",
-    "start": "node dist/src/index.js mcp",
+    "start": "node dist/index.js mcp",
     "test": "vitest run",
     "test:watch": "vitest",
-    "inspector": "pnpm dlx @modelcontextprotocol/inspector node dist/src/index.js mcp",
+    "inspector": "pnpm dlx @modelcontextprotocol/inspector node dist/index.js mcp",
     "inspector:dev": "pnpm dlx @modelcontextprotocol/inspector tsx src/index.ts mcp",
     "prepublishOnly": "pnpm build"
   },

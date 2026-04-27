@@ -1,6 +1,6 @@
 import ignore from 'ignore';
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve, relative } from 'node:path';
+import { isAbsolute, resolve, relative } from 'node:path';
 
 export interface GitignoreFilter {
   ignores(pathname: string): boolean;
@@ -11,6 +11,11 @@ const noopFilter: GitignoreFilter = {
   ignores: () => false,
   ignoresDir: () => false,
 };
+
+function normalizePath(pathname: string): string | null {
+  const normalized = pathname.replace(/\\/g, '/').replace(/^\/+/, '');
+  return normalized === '' || normalized.startsWith('..') ? null : normalized;
+}
 
 /*
  * Creates a custom filter from comma-separated patterns.
@@ -30,8 +35,14 @@ export function createCustomFilter(patterns: string): GitignoreFilter {
   const ig = ignore().add(patternList);
 
   return {
-    ignores: (pathname: string) => ig.ignores(pathname),
-    ignoresDir: (dirPath: string) => ig.ignores(dirPath) || ig.ignores(dirPath + '/'),
+    ignores: (pathname: string) => {
+      const normalized = normalizePath(pathname);
+      return normalized ? ig.ignores(normalized) : false;
+    },
+    ignoresDir: (dirPath: string) => {
+      const normalized = normalizePath(dirPath);
+      return normalized ? ig.ignores(normalized) || ig.ignores(normalized + '/') : false;
+    },
   };
 }
 
@@ -61,7 +72,8 @@ export function createGitignoreFilter(
   rootDir: string,
   gitignorePath: string = '.gitignore'
 ): GitignoreFilter {
-  const absoluteGitignorePath = resolve(rootDir, gitignorePath);
+  const absoluteRootDir = resolve(rootDir);
+  const absoluteGitignorePath = resolve(absoluteRootDir, gitignorePath);
 
   if (!existsSync(absoluteGitignorePath)) {
     return noopFilter;
@@ -70,19 +82,20 @@ export function createGitignoreFilter(
   const gitignoreContent = readFileSync(absoluteGitignorePath, 'utf8');
   const ig = ignore().add(gitignoreContent);
 
+  function toRelativePath(pathname: string): string | null {
+    const candidate = isAbsolute(pathname) ? relative(absoluteRootDir, pathname) : pathname;
+    return normalizePath(candidate);
+  }
+
   return {
     ignores: (pathname: string) => {
-      const relativePath = relative(rootDir, pathname);
-      if (!relativePath || relativePath.startsWith('..')) {
-        return false;
-      }
+      const relativePath = toRelativePath(pathname);
+      if (!relativePath) return false;
       return ig.ignores(relativePath);
     },
     ignoresDir: (dirPath: string) => {
-      const relativePath = relative(rootDir, dirPath);
-      if (!relativePath || relativePath.startsWith('..')) {
-        return false;
-      }
+      const relativePath = toRelativePath(dirPath);
+      if (!relativePath) return false;
       return ig.ignores(relativePath) || ig.ignores(relativePath + '/');
     },
   };
